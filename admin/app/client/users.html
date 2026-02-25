@@ -110,6 +110,7 @@
         <button class="btn active" onclick="loadUsers('klan')">Клан</button>
         <button class="btn" onclick="loadUsers('sost-1')">Первый состав</button>
         <button class="btn" onclick="loadUsers('sost-2')">Второй состав</button>
+        <button class="btn" id="sortBtn" onclick="toggleSort()">Менее активные</button>
     </div>
     <div id="users"></div>
 
@@ -117,21 +118,108 @@
         const urlParams = new URLSearchParams(window.location.search);
         const chat = urlParams.get('chat') || 'klan';
         let currentChat = chat;
+        let isSorted = false;
+        let currentUsers = [];
+        
+        // Функция для преобразования даты в миллисекунды для сравнения
+        function parseDateToMs(dateString) {
+            if (!dateString) return 0;
+            
+            try {
+                const timePart = dateString.split(' ')[0];
+                const datePart = dateString.split(' ')[1];
+                
+                if (!timePart || !datePart) return 0;
+                
+                const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                const [day, month, year] = datePart.split('.').map(Number);
+                
+                return new Date(year, month - 1, day, hours, minutes, seconds).getTime();
+            } catch (e) {
+                return 0;
+            }
+        }
+        
+        // Функция для преобразования даты в формат "X дней Y часов Z минут назад"
+        function formatTimeAgo(dateString) {
+            if (!dateString) return 'Неизвестно';
+            
+            try {
+                // Парсим дату в формате "ч:мин:сек д.м.гггг"
+                const timePart = dateString.split(' ')[0]; // "ч:мин:сек"
+                const datePart = dateString.split(' ')[1];  // "д.м.гггг"
+                
+                if (!timePart || !datePart) return dateString;
+                
+                const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                const [day, month, year] = datePart.split('.').map(Number);
+                
+                const lastMessageDate = new Date(year, month - 1, day, hours, minutes, seconds);
+                const now = new Date();
+                
+                const diffMs = now - lastMessageDate;
+                if (diffMs < 0) return 'Только что';
+                
+                const diffSeconds = Math.floor(diffMs / 1000);
+                const diffMinutes = Math.floor(diffSeconds / 60);
+                const diffHours = Math.floor(diffMinutes / 60);
+                const diffDays = Math.floor(diffHours / 24);
+                
+                if (diffDays > 0) {
+                    const remainingHours = diffHours % 24;
+                    const remainingMinutes = diffMinutes % 60;
+                    return `${diffDays}д ${remainingHours}ч ${remainingMinutes}м назад`;
+                } else if (diffHours > 0) {
+                    const remainingMinutes = diffMinutes % 60;
+                    return `${diffHours}ч ${remainingMinutes}м назад`;
+                } else if (diffMinutes > 0) {
+                    return `${diffMinutes}м назад`;
+                } else {
+                    return 'Только что';
+                }
+            } catch (e) {
+                return dateString;
+            }
+        }
+        
+        function renderUsers(users) {
+            document.getElementById('users').innerHTML = users.map(user => 
+                `<div class="user-card" onclick="window.location.href='user-detail.html?chat=${currentChat}&id=${user.tg_ids}'">
+                    <div class="user-name">${user.nik}</div>
+                    <div class="user-info">@${user.username}</div>
+                    <div class="user-info" style="color: #7c4dff; margin-top: 10px;">Последнее сообщение: ${formatTimeAgo(user.last_date)}</div>
+                </div>`
+            ).join('');
+        }
+        
+        function toggleSort() {
+            isSorted = !isSorted;
+            const sortBtn = document.getElementById('sortBtn');
+            
+            let usersToRender = [...currentUsers];
+            
+            if (isSorted) {
+                sortBtn.classList.add('active');
+                usersToRender.sort((a, b) => parseDateToMs(a.last_date) - parseDateToMs(b.last_date));
+            } else {
+                sortBtn.classList.remove('active');
+            }
+            
+            renderUsers(usersToRender);
+        }
         
         function loadUsers(chatName) {
             currentChat = chatName;
+            isSorted = false;
+            document.getElementById('sortBtn').classList.remove('active');
             document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
             fetch(`http://93.177.117.241:8000/users/${chatName}`)
                 .then(res => res.json())
                 .then(users => {
-                    document.getElementById('users').innerHTML = Object.values(users).map(user => 
-                        `<div class="user-card" onclick="window.location.href='user-detail.html?chat=${currentChat}&id=${user.tg_ids}'">
-                            <div class="user-name">${user.nik}</div>
-                            <div class="user-info">@${user.username}</div>
-                        </div>`
-                    ).join('');
+                    currentUsers = Object.values(users);
+                    renderUsers(currentUsers);
                 });
         }
         
