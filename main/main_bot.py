@@ -3383,20 +3383,23 @@ async def ban_list_next(call: types.CallbackQuery, bot: Bot):
 
 
 async def main() -> None:
- 
-    bot = Bot(token=TOKEN)
-    dp = Dispatcher()
+    try:
+        bot = Bot(token=TOKEN)
+        dp = Dispatcher()
 
-    dp.include_router(message_top_router)
-    dp.include_router(farm_router)
-    dp.include_router(cubes_router)
-    dp.include_router(kasik_router)
-    dp.include_router(golden_rulet_router)
-    dp.include_router(router)
+        dp.include_router(message_top_router)
+        dp.include_router(farm_router)
+        dp.include_router(cubes_router)
+        dp.include_router(kasik_router)
+        dp.include_router(golden_rulet_router)
+        dp.include_router(router)
+        
     
- 
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+        await bot.delete_webhook(drop_pending_updates=True)
+        await dp.start_polling(bot)
+    except Exception as e:
+        print(e)
+        await main()
  
 if __name__ == "__main__":
 
