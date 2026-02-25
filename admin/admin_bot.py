@@ -25,15 +25,17 @@ from admin.admin_panel import *
 
 
 async def main() -> None:
- 
-    bot = Bot(token=TOKEN)
-    dp = Dispatcher()
- 
-    dp.include_router(router)
- 
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
- 
+    try:
+        bot = Bot(token=TOKEN)
+        dp = Dispatcher()
+    
+        dp.include_router(router)
+    
+        await bot.delete_webhook(drop_pending_updates=True)
+        await dp.start_polling(bot)
+    except Exception as e:
+        print(e)
+        await main()
 if __name__ == "__main__":
 
     asyncio.run(main())
