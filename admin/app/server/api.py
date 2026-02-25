@@ -11,7 +11,8 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.pa
 sys.path.insert(0, ROOT_DIR)
 
 from main.config3 import *
-from main.main_bot import TOKEN
+import main.secret
+TOKEN = main.secret.main_token
 
 bot = Bot(token=TOKEN)
 class UserAction(BaseModel):
