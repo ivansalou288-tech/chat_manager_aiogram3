@@ -16,8 +16,9 @@ from modules.message_top import router as message_top_router
 from modules.cubes import router as cubes_router
 from modules.farm import router as farm_router
 from modules.kasik import router as kasik_router
+import secret
 # Add router to dispatcher
-TOKEN = '8451829699:AAE_tfApKWq3r82i0U7yD98RCcQPIMmMT1Q'
+TOKEN = secret.main_token
 router = Router(name=__name__)
 
 page_b = 0

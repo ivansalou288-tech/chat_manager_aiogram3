@@ -9,7 +9,7 @@ import datetime
 import aiogram
 from aiogram.filters import Command
 import password_generator
-
+import main.secret
 
 #? EN: User IDs allowed to create new links
 #* RU: ID пользователей, которым разрешено создавать новые ссылки
@@ -41,6 +41,6 @@ sost_1 = -int(cursor.execute(f"SELECT chat_id FROM chat_ids WHERE chat_name = ?"
 sost_2 = -int(cursor.execute(f"SELECT chat_id FROM chat_ids WHERE chat_name = ?", ('sost_2',)).fetchall()[0][0])
 klan = -int(cursor.execute(f"SELECT chat_id FROM chat_ids WHERE chat_name = ?", ('klan',)).fetchall()[0][0])
 
-TOKEN = '7976707853:AAEbdICz8JL5P1Y9U04C7Ag0ndpY7NiOczo'
+TOKEN = main.secret.admin_token
 bot = Bot(token=TOKEN)
 router = Router(name=__name__)
