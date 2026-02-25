@@ -192,6 +192,30 @@ async def admin_ban(chat: str, user_id: int, reason: str | None) -> any:
         await insert_ban_user(user_id, user_men, 'Admin Panel', reason, message_idd, -(chats[chat]))
         await bot.ban_chat_member(-(chats[chat]), user_id)
 
+def dell_sdk(chat_id: int, user_id: int) -> Any:
+        
+    connection = sqlite3.connect(main_path, check_same_thread=False)
+    cursor = connection.cursor()
+    try:
+        cursor.execute(f'DELETE FROM [{chat_id}] WHERE tg_id = ?', (user_id, ))
+        connection.commit()
+    except sqlite3.OperationalError:
+        pass
+
+    connection.commit()
+
+def full_dell_sdk(user_id: int) -> Any:
+        
+    connection = sqlite3.connect(main_path, check_same_thread=False)
+    cursor = connection.cursor()
+    for chat_id in chats.values():
+        try:
+            cursor.execute(f'DELETE FROM [{chat_id}] WHERE tg_id = ?', (user_id, ))
+            connection.commit()
+        except sqlite3.OperationalError:
+            pass
+
+    connection.commit()
 
 @app.get("/users/{chat}")
 def get_users(chat: str):
@@ -223,6 +247,8 @@ def dell(action: UserAction):
     chat = action.chat
     userid = action.userid
     print(f'd {chat} {userid}')
+    chat_id = chats[chat]
+    dell_sdk(chat_id, userid)
     return {"status": "ok"}
 
 @app.post("/full_dell")
@@ -230,6 +256,7 @@ def full_dell(action: UserAction):
     chat = action.chat
     userid = action.userid
     print(f'fd {chat} {userid}')
+    full_dell_sdk(userid)
     return {"status": "ok"}
 
 
