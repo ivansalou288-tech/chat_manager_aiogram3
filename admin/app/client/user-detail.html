@@ -193,7 +193,7 @@
         
         document.getElementById('backBtn').href = `users.html?chat=${chat}`;
         
-        fetch(`http://localhost:8000/users/${chat}`)
+        fetch(`http://93.177.117.241:8000/users/${chat}`)
             .then(res => res.json())
             .then(users => {
                 const user = Object.values(users).find(u => u.tg_ids == userId);
@@ -230,7 +230,7 @@
         
         function banUser() {
             const reason = document.getElementById('banReason').value;
-            fetch('http://localhost:8000/ban', {
+            fetch('http://93.177.117.241:8000/ban', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat: chat, userid: userId, reason: reason })
@@ -244,7 +244,7 @@
         }
         
         function deleteUser() {
-            fetch('http://localhost:8000/dell', {
+            fetch('http://93.177.117.241:8000/dell', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat: chat, userid: userId })
@@ -258,7 +258,7 @@
         }
         
         function fullDeleteUser() {
-            fetch('http://localhost:8000/full_dell', {
+            fetch('http://93.177.117.241:8000/full_dell', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat: chat, userid: userId })

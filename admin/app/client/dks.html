@@ -117,7 +117,7 @@
             document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            fetch(`http://localhost:8000/dks/${chat}`)
+            fetch(`http://93.177.117.241:8000/dks/${chat}`)
                 .then(res => res.json())
                 .then(commands => {
                     document.getElementById('commands').innerHTML = Object.values(commands).map(cmd => 

@@ -123,7 +123,7 @@
             document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            fetch(`http://localhost:8000/users/${chatName}`)
+            fetch(`http://93.177.117.241:8000/users/${chatName}`)
                 .then(res => res.json())
                 .then(users => {
                     document.getElementById('users').innerHTML = Object.values(users).map(user => 
