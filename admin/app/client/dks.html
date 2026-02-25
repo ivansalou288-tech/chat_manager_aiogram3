@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Уровень команд</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #b388ff;
+            text-shadow: 0 0 20px #b388ff, 0 0 40px #7c4dff;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        #commands {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+        .user-card {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 2px solid #7c4dff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.3), inset 0 0 20px rgba(124, 77, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(124, 77, 255, 0.6), inset 0 0 30px rgba(124, 77, 255, 0.2);
+            border-color: #b388ff;
+        }
+        .user-name {
+            font-size: 1.5em;
+            color: #b388ff;
+            text-shadow: 0 0 10px #b388ff;
+            margin-bottom: 10px;
+        }
+        .user-info {
+            color: #e0e0e0;
+            line-height: 1.8;
+        }
+        .label {
+            color: #7c4dff;
+            font-weight: bold;
+        }
+        .buttons {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .btn {
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border: 2px solid #b388ff;
+            color: #fff;
+            padding: 15px 30px;
+            margin: 0 10px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(124, 77, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(124, 77, 255, 0.7);
+        }
+        .btn.active {
+            background: linear-gradient(145deg, #b388ff, #7c4dff);
+            box-shadow: 0 0 30px rgba(179, 136, 255, 0.8);
+        }
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border: 2px solid #b388ff;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(124, 77, 255, 0.4);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(124, 77, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">←</a>
+    <h1>Уровень команд</h1>
+    <div class="buttons">
+        <button class="btn active" onclick="loadCommands('klan')">Клан</button>
+        <button class="btn" onclick="loadCommands('sostav')">Первый состав</button>
+        
+    </div>
+    <div id="commands"></div>
+
+    <script>
+        function loadCommands(chat) {
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            fetch(`http://localhost:8000/dks/${chat}`)
+                .then(res => res.json())
+                .then(commands => {
+                    document.getElementById('commands').innerHTML = Object.values(commands).map(cmd => 
+                        `<div class="user-card">
+                            <div class="user-name">${cmd.command}</div>
+                            <div class="user-info">
+                                <span class="label">Уровень доступа:</span> ${cmd.access}
+                            </div>
+                        </div>`
+                    ).join('');
+                });
+        }
+        
+        loadCommands('klan');
+    </script>
+</body>
+</html>
