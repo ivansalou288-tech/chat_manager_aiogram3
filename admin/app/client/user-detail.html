@@ -516,10 +516,12 @@
                             // Нажатие на кнопку "Снять" отправляет POST-запрос
                             card.querySelector('.warning-remove-btn').addEventListener('click', (e) => {
                                 e.stopPropagation();
+                                const btn = e.currentTarget;
+                                const warnNum = parseInt(btn.getAttribute('data-warn-num')) || num;
                                 fetch('http://93.177.117.241:8000/snat_warn', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ chat: chat, userid: userId })
+                                    body: JSON.stringify({ chat: chat, userid: userId, num: warnNum })
                                 }).then(() => {
                                     // Пока по заданию ничего больше не делаем
                                 });
