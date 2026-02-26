@@ -68,7 +68,6 @@ async def get_users_sdk(chat: str):
     users = {}
     index = 1
     for user in userss:
-            
             tg_ids = user[0]
             usernames = user[1]
             names = user[2]
@@ -80,9 +79,15 @@ async def get_users_sdk(chat: str):
             last_date = user[8]
             date_vhod = user[9]
             mess_count = user[10]
-            chat_member = await bot.get_chat_member(-(chats_names[chat]), tg_ids)
-            status = chat_member.status
-            print(status)
+
+            # Пытаемся получить статус участника в чате; если его больше нет в чате,
+            # Telegram может вернуть ошибку "member not found" — тогда считаем, что
+            # пользователь не состоит в чате.
+            try:
+                chat_member = await bot.get_chat_member(-(chats_names[chat]), tg_ids)
+                status = chat_member.status
+            except Exception:
+                status = 'left'
 
             if status == 'administrator':
                 chat_status = '👨🏻‍🔧 Телеграм-админ этого чата'
@@ -91,9 +96,23 @@ async def get_users_sdk(chat: str):
             elif status == 'member' or status == 'restricted':
                 chat_status = '💚 Состоит в чате'
             else:
-                chat_status = '💔 Не состоит вы чате' 
-            users[index] = {'tg_ids': tg_ids, 'username': usernames, 'name': names, 'age': age, 'nik_pubg': nik_pubg, 'id_pubg': id_pubg, 'nik': nik, 'rang': rang, 'last_date': last_date, 'date_vhod': date_vhod, 'mess_count': mess_count, "status": chat_status}
-            index +=1
+                chat_status = '💔 Не состоит в чате'
+
+            users[index] = {
+                'tg_ids': tg_ids,
+                'username': usernames,
+                'name': names,
+                'age': age,
+                'nik_pubg': nik_pubg,
+                'id_pubg': id_pubg,
+                'nik': nik,
+                'rang': rang,
+                'last_date': last_date,
+                'date_vhod': date_vhod,
+                'mess_count': mess_count,
+                'status': chat_status,
+            }
+            index += 1
     return users
 
 def get_dk_sdk(chat: str):
