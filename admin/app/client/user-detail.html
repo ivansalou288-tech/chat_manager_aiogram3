@@ -137,6 +137,76 @@
             padding-top: 30px;
             border-top: 2px solid #7c4dff;
         }
+        .warnings-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #ff9800;
+        }
+        .warnings-title {
+            font-size: 1.5em;
+            color: #ffc107;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px #ff9800;
+        }
+        .no-warnings {
+            text-align: center;
+            color: #bbb;
+            font-size: 1.1em;
+            padding: 20px;
+            background: rgba(255, 152, 0, 0.08);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 193, 7, 0.8);
+        }
+        .warnings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .warning-card {
+            background: radial-gradient(circle at top left, rgba(255, 193, 7, 0.18), rgba(26, 26, 46, 0.95));
+            border: 2px solid rgba(255, 193, 7, 0.9);
+            border-radius: 10px;
+            padding: 18px 20px;
+            box-shadow: 0 0 18px rgba(255, 193, 7, 0.4);
+            transition: all 0.3s ease;
+        }
+        .warning-card:hover {
+            background: radial-gradient(circle at top left, rgba(255, 193, 7, 0.26), rgba(26, 26, 46, 1));
+            box-shadow: 0 0 26px rgba(255, 193, 7, 0.7);
+            transform: translateY(-2px);
+        }
+        .warning-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .warning-card-title {
+            font-size: 1.15em;
+            color: #ffeb3b;
+            font-weight: bold;
+        }
+        .warning-card-body {
+            color: #f5f5f5;
+            line-height: 1.7;
+        }
+        .warning-field {
+            margin-bottom: 6px;
+        }
+        .warning-field-label {
+            color: #ffc107;
+            font-weight: 600;
+            display: inline-block;
+            min-width: 110px;
+        }
+        .warning-field-value a {
+            color: #ffeb3b;
+            text-decoration: none;
+        }
+        .warning-field-value a:hover {
+            text-decoration: underline;
+        }
         .recommendations-title {
             font-size: 1.5em;
             color: #b388ff;
@@ -292,6 +362,7 @@
                         </div>
                     `;
                     document.getElementById('userCard').innerHTML = userCardHTML;
+                    loadWarnings();
                     loadRecommendations();
                 }
             });
@@ -343,16 +414,89 @@
             });
         }
         
+        function loadWarnings() {
+            fetch(`http://93.177.117.241:8000/warns/${chat}/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const userCard = document.getElementById('userCard');
+                    // На всякий случай: чтобы не дублировать блок при повторном вызове
+                    const existingSection = userCard.querySelector('.warnings-section');
+                    if (existingSection) existingSection.remove();
+
+                    const warningsSection = document.createElement('div');
+                    warningsSection.className = 'warnings-section';
+                    warningsSection.innerHTML = '<div class="warnings-title">⚠️ Предупреждения</div>';
+
+                    const warnsArray = Array.isArray(data) ? data : Object.values(data || {});
+                    const warns = (warnsArray || []).slice(0, 3);
+
+                    if (!warns || warns.length === 0) {
+                        warningsSection.innerHTML += '<div class="no-warnings">Предупреждений нет</div>';
+                    } else {
+                        const list = document.createElement('div');
+                        list.className = 'warnings-list';
+
+                        warns.forEach((w, index) => {
+                            const card = document.createElement('div');
+                            card.className = 'warning-card';
+
+                            const num = w?.num ?? (index + 1);
+                            const reason = (w?.reason ?? '').toString().trim();
+                            const moder = (w?.moder ?? '').toString().trim();
+
+                            card.innerHTML = `
+                                <div class="warning-card-header">
+                                    <div class="warning-card-title">Предупреждение #${num}</div>
+                                </div>
+                                <div class="warning-card-body">
+                                    <div class="warning-field">
+                                        <span class="warning-field-label">Причина:</span>
+                                        <span class="warning-field-value">${reason}</span>
+                                    </div>
+                                    <div class="warning-field">
+                                        <span class="warning-field-label">Модератор:</span>
+                                        <span class="warning-field-value">${moder}</span>
+                                    </div>
+                                </div>
+                            `;
+
+                            list.appendChild(card);
+                        });
+
+                        warningsSection.appendChild(list);
+                    }
+
+                    userCard.appendChild(warningsSection);
+                })
+                .catch(err => {
+                    console.error('Ошибка при загрузке предупреждений:', err);
+                    const userCard = document.getElementById('userCard');
+                    const existingSection = userCard.querySelector('.warnings-section');
+                    if (existingSection) existingSection.remove();
+                    const warningsSection = document.createElement('div');
+                    warningsSection.className = 'warnings-section';
+                    warningsSection.innerHTML = '<div class="no-warnings">Ошибка при загрузке предупреждений</div>';
+                    userCard.appendChild(warningsSection);
+                });
+        }
+
         function loadRecommendations() {
             fetch(`http://93.177.117.241:8000/recom/${userId}`)
                 .then(res => res.json())
-                .then(recommendations => {
+                .then(data => {
                     const userCard = document.getElementById('userCard');
+                    // На всякий случай: если функция вызовется повторно — не дублируем блок
+                    const existingSection = userCard.querySelector('.recommendations-section');
+                    if (existingSection) existingSection.remove();
+
+                    // API может вернуть как массив, так и объект (например, {"0": {...}, "1": {...}})
+                    const recommendations = Array.isArray(data) ? data : Object.values(data || {});
+
                     const recommendationsSection = document.createElement('div');
                     recommendationsSection.className = 'recommendations-section';
                     recommendationsSection.innerHTML = '<div class="recommendations-title">📋 Рекомендации</div>';
                     
-                    if (recommendations.length === 0) {
+                    if (!recommendations || recommendations.length === 0) {
                         recommendationsSection.innerHTML += '<div class="no-recommendations">Рекомендации отсутствуют</div>';
                     } else {
                         const recList = document.createElement('div');
@@ -363,7 +507,7 @@
                             recCard.className = 'recommendation-card';
                             
                             // Парсим дату в формате "01.12.2025"
-                            const dateStr = rec.date.trim();
+                            const dateStr = (rec?.date ?? '').toString().trim();
                             const recDate = dateStr;
                             
                             recCard.innerHTML = `
@@ -374,23 +518,23 @@
                                 <div class="recommendation-card-body">
                                     <div class="recommendation-field">
                                         <span class="recommendation-field-label">PUBG ID:</span>
-                                        <span class="recommendation-field-value">${rec.pubg_id}</span>
+                                        <span class="recommendation-field-value">${rec?.pubg_id ?? ''}</span>
                                     </div>
                                     <div class="recommendation-field">
                                         <span class="recommendation-field-label">ID модератора:</span>
-                                        <span class="recommendation-field-value">${rec.moder_id}</span>
+                                        <span class="recommendation-field-value">${rec?.moder_id ?? ''}</span>
                                     </div>
                                     <div class="recommendation-field">
                                         <span class="recommendation-field-label">Причина:</span>
-                                        <span class="recommendation-field-value">${rec.reason.trim()}</span>
+                                        <span class="recommendation-field-value">${(rec?.reason ?? '').toString().trim()}</span>
                                     </div>
                                     <div class="recommendation-field">
                                         <span class="recommendation-field-label">Ранг:</span>
-                                        <span class="recommendation-field-value">${rec.rang.trim()}</span>
+                                        <span class="recommendation-field-value">${(rec?.rang ?? '').toString().trim()}</span>
                                     </div>
                                     <div class="recommendation-field">
                                         <span class="recommendation-field-label">ID рекомендации:</span>
-                                        <span class="recommendation-field-value">${rec.rec_id}</span>
+                                        <span class="recommendation-field-value">${rec?.rec_id ?? ''}</span>
                                     </div>
                                 </div>
                             `;
@@ -406,6 +550,8 @@
                 .catch(err => {
                     console.error('Ошибка при загрузке рекомендаций:', err);
                     const userCard = document.getElementById('userCard');
+                    const existingSection = userCard.querySelector('.recommendations-section');
+                    if (existingSection) existingSection.remove();
                     const recommendationsSection = document.createElement('div');
                     recommendationsSection.className = 'recommendations-section';
                     recommendationsSection.innerHTML = '<div class="no-recommendations">Ошибка при загрузке рекомендаций</div>';
