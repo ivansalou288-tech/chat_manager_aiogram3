@@ -334,7 +334,12 @@ def snat_warn(action: SnatWarnAction):
     chat = action.chat
     userid = action.userid
     num = action.num
-    print(f'snat_warn {chat} {userid} num={num}')
+    connection = sqlite3.connect(warn_path, check_same_thread=False)
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT warns_count FROM [{(chats_names[chat])}] WHERE tg_id=?", (userid,))
+    cnt = cursor.fetchone()[0]
+    print(f'snat_warn chat_id={chats_names[chat]} {userid} num={num} cnt = {cnt}')
+    # asyncio.run(snat_admn_warn(userid, num, cnt, chats_names[chat]))
     return {"status": "ok"}
 
 if  __name__ == '__main__':
