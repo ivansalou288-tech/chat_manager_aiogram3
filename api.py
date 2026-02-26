@@ -219,7 +219,7 @@ def full_dell_sdk(user_id: int) -> Any:
 
 @app.get("/users/{chat}")
 def get_users(chat: str):
-    if chat in chats.keys():
+    if chat in chats_names.keys():
         users = get_users_sdk(chat)
         return users
     else:
