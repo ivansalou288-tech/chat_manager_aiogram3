@@ -19,6 +19,11 @@ class UserAction(BaseModel):
     chat: str
     userid: str
 
+class SnatWarnAction(BaseModel):
+    chat: str
+    userid: str
+    num: int
+
 class BanAction(BaseModel):
     chat: str
     userid: str
@@ -321,14 +326,15 @@ def full_dell(action: UserAction):
     return {"status": "ok"}
 
 @app.post("/snat_warn")
-def snat_warn(action: UserAction):
+def snat_warn(action: SnatWarnAction):
     """
     Эндпоинт-заглушка для снятия предупреждения через админ-панель.
     Пока только принимает chat и userid и ничего больше не делает.
     """
     chat = action.chat
     userid = action.userid
-    print(f'snat_warn {chat} {userid}')
+    num = action.num
+    print(f'snat_warn {chat} {userid} num={num}')
     return {"status": "ok"}
 
 if  __name__ == '__main__':
