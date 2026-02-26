@@ -233,6 +233,13 @@ def get_dks(chat: str):
     else:
         raise HTTPException(status_code=404, detail="Chat not found")
 
+@app.get('/recom/{user}')
+def get_recom(user: int):
+    connection = sqlite3.connect(main_path, check_same_thread=False)
+    cursor = connection.cursor()
+    all = cursor.execute('SELECT * FROM recommendation WHERE user_id = ?', (tg_id,)).fetchall()
+    print(all)
+
 @app.post("/ban")
 def ban(action: BanAction):
     chat = action.chat
