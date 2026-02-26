@@ -25,7 +25,7 @@ class BanAction(BaseModel):
     reason: str
 
 
-chats = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
+chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
 
 command_name = {
             'ban': 'Блокировка пользователей',
@@ -59,7 +59,7 @@ def get_users_sdk(chat: str):
        
     connection = sqlite3.connect(main_path)
     cursor = connection.cursor()
-    userss = cursor.execute(f'SELECT * FROM [{chats[chat]}]').fetchall()
+    userss = cursor.execute(f'SELECT * FROM [{chats_names[chat]}]').fetchall()
     users = {}
     index = 1
     for user in userss:
@@ -185,12 +185,12 @@ async def insert_ban_user(user_id, user_men, moder_men, comments, message_id, ch
 async def admin_ban(chat: str, user_id: int, reason: str | None) -> any:
 
         user_men = GetUserByID(user_id).mention
-        await snat_admn_warn(user_id, 3, 2, chats[chat])
-        await snat_admn_warn(user_id, 2, 1, chats[chat])
-        await snat_admn_warn(user_id, 1, 0, chats[chat])
-        message_idd = (await bot.send_message(-(chats[chat]), f'<b>{voscl}Внимание{voscl}</b>\n{circle_em}Злостный нарушитель {user_men} получает бан и покидает нас\n👮‍♂️Выгнал его: Некий админ\n{mes_em}Выгнали его за: {reason}', parse_mode='html')).message_id
-        await insert_ban_user(user_id, user_men, 'Admin Panel', reason, message_idd, -(chats[chat]))
-        await bot.ban_chat_member(-(chats[chat]), user_id)
+        await snat_admn_warn(user_id, 3, 2, chats_names[chat])
+        await snat_admn_warn(user_id, 2, 1, chats_names[chat])
+        await snat_admn_warn(user_id, 1, 0, chats_names[chat])
+        message_idd = (await bot.send_message(-(chats_names[chat]), f'<b>{voscl}Внимание{voscl}</b>\n{circle_em}Злостный нарушитель {user_men} получает бан и покидает нас\n👮‍♂️Выгнал его: Некий админ\n{mes_em}Выгнали его за: {reason}', parse_mode='html')).message_id
+        await insert_ban_user(user_id, user_men, 'Admin Panel', reason, message_idd, -(chats_names[chat]))
+        await bot.ban_chat_member(-(chats_names[chat]), user_id)
 
 def dell_sdk(chat_id: int, user_id: int) -> Any:
         
@@ -258,6 +258,41 @@ def get_recom(user: int):
                  }
         recomendations.append(recom)
     return recomendations
+
+
+@app.get('/warns/{chat}/{user}')
+def get_warns(chat: str, user: int):
+    chat_id = chats_names.get(chat)
+    if chat_id is None:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    connection = sqlite3.connect(warn_path, check_same_thread=False)
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT * FROM [{(chat_id)}] WHERE tg_id=?", (user,))
+    row = cursor.fetchone()
+
+    # Если предупреждений нет — возвращаем пустой список
+    if not row:
+        return []
+
+    # Структура строки берётся из snat_admn_warn:
+    # 0: tg_id, 1: warns_count, 2: first_warn, 3: second_warn, 4: therd_warn,
+    # 5: first_moder, 6: second_moder, 7: therd_moder
+    first_warn, second_warn, therd_warn = row[2], row[3], row[4]
+    first_moder, second_moder, therd_moder = row[5], row[6], row[7]
+
+    warns = []
+    if first_warn:
+        warns.append({"num": 1, "reason": first_warn, "moder": first_moder})
+    if second_warn:
+        warns.append({"num": 2, "reason": second_warn, "moder": second_moder})
+    if therd_warn:
+        warns.append({"num": 3, "reason": therd_warn, "moder": therd_moder})
+
+    # Вернём максимум 3 предупреждения (по факту их и так максимум 3)
+    return warns[:3]
+
+
 
 @app.post("/ban")
 def ban(action: BanAction):
