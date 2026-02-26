@@ -200,6 +200,35 @@
             display: inline-block;
             min-width: 110px;
         }
+        .warning-remove-btn {
+            margin-top: 10px;
+            padding: 0 16px;
+            height: 0;
+            border-radius: 8px;
+            border: 1px solid #ffc107;
+            background: linear-gradient(145deg, #ff9800, #ffc107);
+            color: #111;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95em;
+            box-shadow: 0 0 0 rgba(255, 193, 7, 0.0);
+            opacity: 0;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: height 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, padding-top 0.2s ease, padding-bottom 0.2s ease;
+        }
+        .warning-remove-btn.visible {
+            height: 32px;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            opacity: 1;
+            transform: scale(1);
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+        .warning-remove-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 16px rgba(255, 193, 7, 0.8);
+        }
         .warning-field-value a {
             color: #ffeb3b;
             text-decoration: none;
@@ -436,6 +465,8 @@
                         const list = document.createElement('div');
                         list.className = 'warnings-list';
 
+                        let openedWarningButton = null;
+
                         warns.forEach((w, index) => {
                             const card = document.createElement('div');
                             card.className = 'warning-card';
@@ -457,8 +488,42 @@
                                         <span class="warning-field-label">Модератор:</span>
                                         <span class="warning-field-value">${moder}</span>
                                     </div>
+                                    <button class="warning-remove-btn" data-warn-num="${num}">Снять</button>
                                 </div>
                             `;
+
+                            // При клике на карточку плавно показываем кнопку "Снять"
+                            card.addEventListener('click', (e) => {
+                                const btn = card.querySelector('.warning-remove-btn');
+                                if (!btn) return;
+                                // Не всплываем, если клик по самой кнопке
+                                if (e.target === btn) return;
+                                // Закрываем ранее открытую кнопку, если она есть и это не текущая
+                                if (openedWarningButton && openedWarningButton !== btn) {
+                                    openedWarningButton.classList.remove('visible');
+                                }
+                                // Тогглим текущую
+                                const isVisible = btn.classList.contains('visible');
+                                if (isVisible) {
+                                    btn.classList.remove('visible');
+                                    openedWarningButton = null;
+                                } else {
+                                    btn.classList.add('visible');
+                                    openedWarningButton = btn;
+                                }
+                            });
+
+                            // Нажатие на кнопку "Снять" отправляет POST-запрос
+                            card.querySelector('.warning-remove-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                fetch('http://93.177.117.241:8000/snat_warn', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ chat: chat, userid: userId })
+                                }).then(() => {
+                                    // Пока по заданию ничего больше не делаем
+                                });
+                            });
 
                             list.appendChild(card);
                         });
