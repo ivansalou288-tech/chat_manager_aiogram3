@@ -50,6 +50,13 @@
             color: #7c4dff;
             font-weight: bold;
         }
+        .user-status {
+            margin-top: 10px;
+            font-size: 1.05em;
+            color: #9ccc65;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(156, 204, 101, 0.7);
+        }
         .back-btn {
             position: fixed;
             top: 20px;
@@ -403,7 +410,8 @@
                 const user = Object.values(users).find(u => u.tg_ids == userId);
                 if (user) {
                     let userCardHTML = `
-                        <div class="user-name">${user.name} (@${user.username})</div>
+                        <div class="user-name">${user.name} (@${user.username || 'без username'})</div>
+                        ${user.status ? `<div class="user-status">${user.status}</div>` : ''}
                         <div class="user-info">
                             <span class="label">ID:</span> ${user.tg_ids}<br>
                             <span class="label">Возраст:</span> ${user.age}<br>
