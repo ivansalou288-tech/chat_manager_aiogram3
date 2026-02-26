@@ -132,6 +132,76 @@
             transform: scale(1.02);
             box-shadow: 0 0 25px rgba(255, 152, 0, 0.7);
         }
+        .recommendations-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #7c4dff;
+        }
+        .recommendations-title {
+            font-size: 1.5em;
+            color: #b388ff;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px #b388ff;
+        }
+        .no-recommendations {
+            text-align: center;
+            color: #999;
+            font-size: 1.1em;
+            padding: 20px;
+            background: rgba(124, 77, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid #7c4dff;
+        }
+        .recommendations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .recommendation-card {
+            background: rgba(124, 77, 255, 0.1);
+            border: 2px solid #7c4dff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(124, 77, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .recommendation-card:hover {
+            background: rgba(124, 77, 255, 0.2);
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .recommendation-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .recommendation-card-title {
+            font-size: 1.2em;
+            color: #b388ff;
+            font-weight: bold;
+        }
+        .recommendation-card-date {
+            color: #7c4dff;
+            font-size: 0.9em;
+        }
+        .recommendation-card-body {
+            color: #e0e0e0;
+            line-height: 1.8;
+        }
+        .recommendation-field {
+            margin-bottom: 10px;
+        }
+        .recommendation-field-label {
+            color: #7c4dff;
+            font-weight: bold;
+            display: inline-block;
+            min-width: 150px;
+        }
+        .recommendation-field-value {
+            color: #fff;
+        }
         .success-overlay {
             display: none;
             position: fixed;
@@ -198,7 +268,7 @@
             .then(users => {
                 const user = Object.values(users).find(u => u.tg_ids == userId);
                 if (user) {
-                    document.getElementById('userCard').innerHTML = `
+                    let userCardHTML = `
                         <div class="user-name">${user.name} (@${user.username})</div>
                         <div class="user-info">
                             <span class="label">ID:</span> ${user.tg_ids}<br>
@@ -221,6 +291,8 @@
                             <button onclick="banUser()">Забанить</button>
                         </div>
                     `;
+                    document.getElementById('userCard').innerHTML = userCardHTML;
+                    loadRecommendations();
                 }
             });
         
@@ -269,6 +341,76 @@
                     window.location.href = `users.html?chat=${chat}`;
                 }, 1500);
             });
+        }
+        
+        function loadRecommendations() {
+            fetch(`http://93.177.117.241:8000/recom/${userId}`)
+                .then(res => res.json())
+                .then(recommendations => {
+                    const userCard = document.getElementById('userCard');
+                    const recommendationsSection = document.createElement('div');
+                    recommendationsSection.className = 'recommendations-section';
+                    recommendationsSection.innerHTML = '<div class="recommendations-title">📋 Рекомендации</div>';
+                    
+                    if (recommendations.length === 0) {
+                        recommendationsSection.innerHTML += '<div class="no-recommendations">Рекомендации отсутствуют</div>';
+                    } else {
+                        const recList = document.createElement('div');
+                        recList.className = 'recommendations-list';
+                        
+                        recommendations.forEach((rec, index) => {
+                            const recCard = document.createElement('div');
+                            recCard.className = 'recommendation-card';
+                            
+                            // Парсим дату в формате "01.12.2025"
+                            const dateStr = rec.date.trim();
+                            const recDate = dateStr;
+                            
+                            recCard.innerHTML = `
+                                <div class="recommendation-card-header">
+                                    <div class="recommendation-card-title">Рекомендация #${index + 1}</div>
+                                    <div class="recommendation-card-date">${recDate}</div>
+                                </div>
+                                <div class="recommendation-card-body">
+                                    <div class="recommendation-field">
+                                        <span class="recommendation-field-label">PUBG ID:</span>
+                                        <span class="recommendation-field-value">${rec.pubg_id}</span>
+                                    </div>
+                                    <div class="recommendation-field">
+                                        <span class="recommendation-field-label">ID модератора:</span>
+                                        <span class="recommendation-field-value">${rec.moder_id}</span>
+                                    </div>
+                                    <div class="recommendation-field">
+                                        <span class="recommendation-field-label">Причина:</span>
+                                        <span class="recommendation-field-value">${rec.reason.trim()}</span>
+                                    </div>
+                                    <div class="recommendation-field">
+                                        <span class="recommendation-field-label">Ранг:</span>
+                                        <span class="recommendation-field-value">${rec.rang.trim()}</span>
+                                    </div>
+                                    <div class="recommendation-field">
+                                        <span class="recommendation-field-label">ID рекомендации:</span>
+                                        <span class="recommendation-field-value">${rec.rec_id}</span>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            recList.appendChild(recCard);
+                        });
+                        
+                        recommendationsSection.appendChild(recList);
+                    }
+                    
+                    userCard.appendChild(recommendationsSection);
+                })
+                .catch(err => {
+                    console.error('Ошибка при загрузке рекомендаций:', err);
+                    const userCard = document.getElementById('userCard');
+                    const recommendationsSection = document.createElement('div');
+                    recommendationsSection.className = 'recommendations-section';
+                    recommendationsSection.innerHTML = '<div class="no-recommendations">Ошибка при загрузке рекомендаций</div>';
+                    userCard.appendChild(recommendationsSection);
+                });
         }
     </script>
 </body>
