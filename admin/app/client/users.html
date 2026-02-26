@@ -53,6 +53,12 @@
             color: #e0e0e0;
             line-height: 1.8;
         }
+        .user-status {
+            margin-top: 8px;
+            font-size: 0.95em;
+            color: #9ccc65;
+            text-shadow: 0 0 8px rgba(156, 204, 101, 0.6);
+        }
         .label {
             color: #7c4dff;
             font-weight: bold;
@@ -186,8 +192,9 @@
             document.getElementById('users').innerHTML = users.map(user => 
                 `<div class="user-card" onclick="window.location.href='user-detail.html?chat=${currentChat}&id=${user.tg_ids}'">
                     <div class="user-name">${user.nik}</div>
-                    <div class="user-info">@${user.username}</div>
+                    <div class="user-info">@${user.username || 'без username'}</div>
                     <div class="user-info" style="color: #7c4dff; margin-top: 10px;">Последнее сообщение: ${formatTimeAgo(user.last_date)}</div>
+                    ${user.status ? `<div class="user-status">${user.status}</div>` : ''}
                 </div>`
             ).join('');
         }

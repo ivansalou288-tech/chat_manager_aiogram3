@@ -60,7 +60,7 @@ app.add_middleware(
 )
 
 
-def get_users_sdk(chat: str):
+async def get_users_sdk(chat: str):
        
     connection = sqlite3.connect(main_path)
     cursor = connection.cursor()
@@ -80,7 +80,19 @@ def get_users_sdk(chat: str):
             last_date = user[8]
             date_vhod = user[9]
             mess_count = user[10]
-            users[index] = {'tg_ids': tg_ids, 'username': usernames, 'name': names, 'age': age, 'nik_pubg': nik_pubg, 'id_pubg': id_pubg, 'nik': nik, 'rang': rang, 'last_date': last_date, 'date_vhod': date_vhod, 'mess_count': mess_count}
+            chat_member = await bot.get_chat_member(-(chats_names[chat]), tg_ids)
+            status = chat_member.status
+            print(status)
+
+            if status == 'administrator':
+                chat_status = '👨🏻‍🔧 Телеграм-админ этого чата'
+            elif status == 'creator':
+                chat_status = '👨🏻‍🔧 Создатель этого чата'
+            elif status == 'member' or status == 'restricted':
+                chat_status = '💚 Состоит в чате'
+            else:
+                chat_status = '💔 Не состоит вы чате' 
+            users[index] = {'tg_ids': tg_ids, 'username': usernames, 'name': names, 'age': age, 'nik_pubg': nik_pubg, 'id_pubg': id_pubg, 'nik': nik, 'rang': rang, 'last_date': last_date, 'date_vhod': date_vhod, 'mess_count': mess_count, "status": chat_status}
             index +=1
     return users
 
@@ -231,7 +243,7 @@ async def admin_warn_dell(user_id: int, chat_id: int, number_warn: int, new_warn
 @app.get("/users/{chat}")
 def get_users(chat: str):
     if chat in chats_names.keys():
-        users = get_users_sdk(chat)
+        users = asyncio.run(get_users_sdk(chat))
         return users
     else:
         raise HTTPException(status_code=404, detail="Chat not found")
