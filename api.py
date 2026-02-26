@@ -320,7 +320,16 @@ def full_dell(action: UserAction):
     full_dell_sdk(userid)
     return {"status": "ok"}
 
-
+@app.post("/snat_warn")
+def snat_warn(action: UserAction):
+    """
+    Эндпоинт-заглушка для снятия предупреждения через админ-панель.
+    Пока только принимает chat и userid и ничего больше не делает.
+    """
+    chat = action.chat
+    userid = action.userid
+    print(f'snat_warn {chat} {userid}')
+    return {"status": "ok"}
 
 if  __name__ == '__main__':
     uvicorn.run('api:app', reload=True, host="0.0.0.0")
