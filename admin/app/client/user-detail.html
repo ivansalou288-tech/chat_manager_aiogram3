@@ -229,6 +229,41 @@
             transform: scale(1.03);
             box-shadow: 0 0 16px rgba(255, 193, 7, 0.8);
         }
+        .warning-removed-icon {
+            margin-top: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #ffc107;
+            color: #111;
+            background: radial-gradient(circle at top left, rgba(255, 235, 59, 0.9), rgba(255, 193, 7, 0.9));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 18px;
+            box-shadow: 0 0 0 rgba(255, 193, 7, 0.0);
+            opacity: 0;
+            transform: scale(0.4) rotate(-20deg);
+            animation: warningCheckAppear 0.4s ease-out forwards;
+        }
+        @keyframes warningCheckAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.4) rotate(-20deg) translateY(10px);
+                box-shadow: 0 0 0 rgba(255, 193, 7, 0.0);
+            }
+            60% {
+                opacity: 1;
+                transform: scale(1.1) rotate(5deg) translateY(0);
+                box-shadow: 0 0 14px rgba(255, 193, 7, 0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg) translateY(0);
+                box-shadow: 0 0 8px rgba(255, 193, 7, 0.7);
+            }
+        }
         .warning-field-value a {
             color: #ffeb3b;
             text-decoration: none;
@@ -523,7 +558,26 @@
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ chat: chat, userid: userId, num: warnNum })
                                 }).then(() => {
-                                    // Пока по заданию ничего больше не делаем
+                                    // Анимированная галочка и плавное удаление карточки
+                                    btn.classList.remove('visible');
+                                    btn.disabled = true;
+                                    openedWarningButton = null;
+
+                                    const icon = document.createElement('div');
+                                    icon.className = 'warning-removed-icon';
+                                    icon.textContent = '✓';
+                                    card.appendChild(icon);
+
+                                    setTimeout(() => {
+                                        card.remove();
+                                        // Если предупреждений больше нет — показать текст
+                                        if (!list.querySelector('.warning-card')) {
+                                            const existingNoWarn = warningsSection.querySelector('.no-warnings');
+                                            if (!existingNoWarn) {
+                                                warningsSection.innerHTML += '<div class="no-warnings">Предупреждений нет</div>';
+                                            }
+                                        }
+                                    }, 450);
                                 });
                             });
 
