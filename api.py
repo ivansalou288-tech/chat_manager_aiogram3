@@ -241,9 +241,9 @@ async def admin_warn_dell(user_id: int, chat_id: int, number_warn: int, new_warn
     await bot.send_message(chat_id=-(chat_id), text=f'{mention}, с тебя сняли одно предупреждение\n👮‍♂️Добрый модер: Некий админ\n{mes_em} Количество твоих предупреждений: {new_warns_count} из 3\n\n<i>Свои предупреждения ты можешь посмотреть по команде</i> «<code>преды</code>»', parse_mode='html')
 
 @app.get("/users/{chat}")
-def get_users(chat: str):
+async def get_users(chat: str):
     if chat in chats_names.keys():
-        users = asyncio.run(get_users_sdk(chat))
+        users = await get_users_sdk(chat)
         return users
     else:
         raise HTTPException(status_code=404, detail="Chat not found")
