@@ -222,6 +222,12 @@ def full_dell_sdk(user_id: int) -> Any:
 
     connection.commit()
 
+
+async def admin_warn_dell(user_id: int, chat_id: int, number_warn: int, new_warns_count: int): #Удаляет нужное предупреждение с сообщением в чат 
+    await snat_admn_warn(user_id, number_warn, new_warns_count, chat_id)
+    mention = GetUserByID(user_id).mention
+    await bot.send_message(chat_id=-(chat_id), text=f'{mention}, с тебя сняли одно предупреждение\n👮‍♂️Добрый модер: Некий админ\n{mes_em} Количество твоих предупреждений: {new_warns_count} из 3\n\n<i>Свои предупреждения ты можешь посмотреть по команде</i> «<code>преды</code>»', parse_mode='html')
+
 @app.get("/users/{chat}")
 def get_users(chat: str):
     if chat in chats_names.keys():
@@ -325,6 +331,8 @@ def full_dell(action: UserAction):
     full_dell_sdk(userid)
     return {"status": "ok"}
 
+
+
 @app.post("/snat_warn")
 def snat_warn(action: SnatWarnAction):
     """
@@ -338,8 +346,8 @@ def snat_warn(action: SnatWarnAction):
     cursor = connection.cursor()
     cursor.execute(f"SELECT warns_count FROM [{(chats_names[chat])}] WHERE tg_id=?", (userid,))
     cnt = cursor.fetchone()[0]
-    print(f'snat_warn chat_id={chats_names[chat]} {userid} num={num} cnt = {cnt}')
-    # asyncio.run(snat_admn_warn(userid, num, cnt, chats_names[chat]))
+    
+    asyncio.run(admin_warn_dell(userid, chats_names[chat], num, (cnt-1)))
     return {"status": "ok"}
 
 if  __name__ == '__main__':
