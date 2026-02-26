@@ -306,12 +306,12 @@ def get_warns(chat: str, user: int):
 
 
 @app.post("/ban")
-def ban(action: BanAction):
+async def ban(action: BanAction):
     chat = action.chat
     userid = action.userid
     reason = action.reason
     print(f'b {chat} {userid} {reason}')
-    asyncio.run(admin_ban(chat, userid, reason))
+    await admin_ban(chat, int(userid), reason)
     return {"status": "ok"}
 
 @app.post("/dell")
@@ -334,20 +334,17 @@ def full_dell(action: UserAction):
 
 
 @app.post("/snat_warn")
-def snat_warn(action: SnatWarnAction):
-    """
-    Эндпоинт-заглушка для снятия предупреждения через админ-панель.
-    Пока только принимает chat и userid и ничего больше не делает.
-    """
+async def snat_warn(action: SnatWarnAction):
     chat = action.chat
     userid = action.userid
     num = action.num
     connection = sqlite3.connect(warn_path, check_same_thread=False)
     cursor = connection.cursor()
     cursor.execute(f"SELECT warns_count FROM [{(chats_names[chat])}] WHERE tg_id=?", (userid,))
-    cnt = cursor.fetchone()[0]
-    
-    asyncio.run(admin_warn_dell(userid, chats_names[chat], num, (cnt-1)))
+    row = cursor.fetchone()
+    cnt = row[0] if row else 0
+
+    await admin_warn_dell(int(userid), chats_names[chat], num, max(cnt - 1, 0))
     return {"status": "ok"}
 
 if  __name__ == '__main__':
