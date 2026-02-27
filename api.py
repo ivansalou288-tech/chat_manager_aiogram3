@@ -6,6 +6,7 @@ import uvicorn
 from pydantic import BaseModel
 import asyncio
 from datetime import datetime
+import password_generator
 # Добавляем корневую директорию проекта в путь
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, ROOT_DIR)
@@ -321,7 +322,15 @@ def recom_add(action: RecomAddAction):
     last_recom_position = action.position
     last_recom_username = action.username
     last_recom_pubg_nik = action.pubg_nik
+    date = datetime.now().strftime('%H:%M:%S %d.%m.%Y')
+    id_recom = password_generator.generate(count=1, length=8, chars='ASDFGHJKL12345678')
     print(last_recom_user_id, last_recom_reason, last_recom_position, last_recom_username, last_recom_pubg_nik)
+    connection = sqlite3.connect(main_path, check_same_thread=False)
+    cursor = connection.cursor()
+    cursor.execute(
+        'INSERT INTO recommendation (user_id, pubg_id, moder, comments, rang, date, recom_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (last_recom_user_id, last_recom_pubg_nik, "Некий админ", last_recom_reason, last_recom_position, date, id_recom))
+    connection.commit()
     return {"status": "ok"}
 
 

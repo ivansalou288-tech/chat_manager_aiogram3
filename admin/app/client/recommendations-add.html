@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Рекомендовать</title>
     <style>
+        @keyframes slideUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        .closing {
+            animation: slideUp 0.5s ease forwards;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -446,8 +461,50 @@
             })
             .then(r => r.json().catch(() => null))
             .then(() => {
-                submitStatus.textContent = 'Отправлено.';
+                const resultBox = document.getElementById('resultBox');
+                const recommendForm = document.getElementById('recommendForm');
+
+                // Добавляем класс анимации для плавного закрытия
+                resultBox.classList.add('closing');
+                recommendForm.classList.add('closing');
+
+                const submitStatus = document.getElementById('submitStatus');
+                submitStatus.textContent = '✓';
                 submitStatus.classList.add('ok');
+                submitStatus.style.fontSize = '2em';
+                submitStatus.style.marginTop = '20px';
+                submitStatus.style.textAlign = 'center';
+
+                // После завершения анимации скрываем элементы
+                setTimeout(() => {
+                    resultBox.style.display = 'none';
+                    recommendForm.style.display = 'none';
+                    resultBox.classList.remove('closing');
+                    recommendForm.classList.remove('closing');
+
+                    // Очищаем поля и статус через 2 секунды
+                    setTimeout(() => {
+                        submitStatus.textContent = '';
+                        submitStatus.className = 'form-status';
+                        submitStatus.style.fontSize = '0.95em';
+                        submitStatus.style.marginTop = '12px';
+                        submitStatus.style.textAlign = 'left';
+
+                        // Сбрасываем состояние для нового поиска
+                        document.getElementById('usernameInput').disabled = false;
+                        document.getElementById('searchBtn').disabled = false;
+                        document.getElementById('usernameInput').value = '';
+                        document.getElementById('usernameInput').focus();
+
+                        // Очищаем выбранного пользователя
+                        selectedUser = null;
+                        isLocked = false;
+
+                        // Очищаем поля формы
+                        document.getElementById('reasonInput').value = '';
+                        document.getElementById('positionInput').value = '';
+                    }, 2000);
+                }, 500);
             })
             .catch(() => {
                 submitStatus.textContent = 'Не удалось отправить.';
