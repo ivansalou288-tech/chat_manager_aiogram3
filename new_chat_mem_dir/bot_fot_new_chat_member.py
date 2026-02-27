@@ -345,19 +345,25 @@ def get_text_messages(message):
             if sostav == 1:
                 # klan_link = bot.export_chat_invite_link(klan)
                 # sostav_link =  bot.export_chat_invite_link(sost_1)
-                cursor.execute(
-                    f'INSERT INTO [{-sost_1}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    (tg_id, username, user_about['name'], user_about['age'], user_about['nik_pubg'],
-                     user_about['id_pubg'], user_about['nik_pubg'], 0, '', now))
+                try:
+                    cursor.execute(
+                        f'INSERT INTO [{-sost_1}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        (tg_id, username, user_about['name'], user_about['age'], user_about['nik_pubg'],
+                        user_about['id_pubg'], user_about['nik_pubg'], 0, '', now))
+                except Exception:
+                    pass
                 connection.commit()
 
             elif sostav == 2:
                 # klan_link = bot.export_chat_invite_link(klan)
                 # sostav_link = bot.export_chat_invite_link(sost_2)
-                cursor.execute(
-                    f'INSERT INTO [{-sost_2}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    (tg_id, username, user_about['name'], user_about['age'], user_about['nik_pubg'],
-                     user_about['id_pubg'], user_about['nik_pubg'], 0, '', now))
+                try:
+                    cursor.execute(
+                        f'INSERT INTO [{-sost_2}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        (tg_id, username, user_about['name'], user_about['age'], user_about['nik_pubg'],
+                         user_about['id_pubg'], user_about['nik_pubg'], 0, '', now))
+                except Exception:
+                    pass
                 connection.commit()
 
 
@@ -372,26 +378,32 @@ def get_text_messages(message):
                 #     (tg_id, username, user_about['name'], user_about['age'], user_about['nik_pubg'],
                 #      user_about['id_pubg'], user_about['nik_pubg'], 0, '', now))
                 # connection.commit()
-                cursor.execute(
-                    f'INSERT INTO [{-sost_1}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    (tg_id, username, user_about['name'], user_about['age'], user_about['nik_pubg'],
-                     user_about['id_pubg'], user_about['nik_pubg'], 0, '', now))
+                try:
+                    cursor.execute(
+                        f'INSERT INTO [{-sost_1}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        (tg_id, username, user_about['name'], user_about['age'], user_about['nik_pubg'],
+                         user_about['id_pubg'], user_about['nik_pubg'], 0, '', now))
+                except Exception:
+                    pass
                 connection.commit()
                 connection.close()
                 print('successful')
                 return
             connection = sqlite3.connect(main_path, check_same_thread=False)
             cursor = connection.cursor()
-            cursor.execute('INSERT INTO black_list (user_id, rison) VALUES (?, ?)', (tg_id, ''))
+            try:
+                cursor.execute('INSERT INTO black_list (user_id, rison) VALUES (?, ?)', (tg_id, ''))
+            except Exception:
+                pass
             connection.commit()  
             bot.send_message(message.chat.id,
                              f'Добро пожаловать в клан Werty!\n\nТвое описание:\nИмя: {user_about["name"]}\nВозраст: {user_about["age"]}\nАйди: {user_about["id_pubg"]}\nНик: {user_about["nik_pubg"]}\n\n Твои ссылки на состав и клан:')
-
+            time.sleep(0.5)
             bot.send_message(message.chat.id, f"!!Ознакомься!!\n\n{cursor.execute('SELECT text FROM texts WHERE text_name = ?', ('pravils',)).fetchall()[0][0]}")
             gaid(message)
-
+            time.sleep(0.5)
             bot.send_photo(chat_id=message.chat.id, photo=open(f'{curent_path}/photos/is_klan.jpg', 'rb'),caption=f"После того как ты ознакомился с информацией выше, кинь скрин того как ты кинул в клан")
-
+            time.sleep(0.5)
             
             
             bot.send_message(logs_gr,
@@ -405,6 +417,13 @@ def get_text_messages(message):
             cursor = connection.cursor()
             cursor.execute('INSERT INTO is_to_klan (user_id, sostav) VALUES (?, ?)', (tg_id, sostav))
             connection.commit()
+
+
+
+
+
+
+
         connection = sqlite3.connect(main_path, check_same_thread=False)
         cursor = connection.cursor()
         try:
