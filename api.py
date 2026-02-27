@@ -244,7 +244,7 @@ def full_dell_sdk(user_id: int) -> Any:
         
     connection = sqlite3.connect(main_path, check_same_thread=False)
     cursor = connection.cursor()
-    for chat_id in chats.values():
+    for chat_id in chats_names.values():
         try:
             cursor.execute(f'DELETE FROM [{chat_id}] WHERE tg_id = ?', (user_id, ))
             connection.commit()
