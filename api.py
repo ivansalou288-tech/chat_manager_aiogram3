@@ -29,6 +29,16 @@ class BanAction(BaseModel):
     userid: str
     reason: str
 
+class RecomAddAction(BaseModel):
+    user_id: int
+    reason: str
+    position: str
+    username: str | None = None
+    pubg_nik: str | None = None
+
+
+
+
 
 chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
 
@@ -300,6 +310,19 @@ def get_recom(user: int):
                  }
         recomendations.append(recom)
     return recomendations
+
+
+@app.post('/recom-add')
+def recom_add(action: RecomAddAction):
+    
+
+    last_recom_user_id = action.user_id
+    last_recom_reason = action.reason
+    last_recom_position = action.position
+    last_recom_username = action.username
+    last_recom_pubg_nik = action.pubg_nik
+    print(last_recom_user_id, last_recom_reason, last_recom_position, last_recom_username, last_recom_pubg_nik)
+    return {"status": "ok"}
 
 
 @app.get('/warns/{chat}/{user}')

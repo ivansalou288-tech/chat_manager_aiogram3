@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рекомендовать</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #050510;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #b388ff;
+            text-shadow: 0 0 20px #b388ff, 0 0 40px #7c4dff;
+            margin-bottom: 40px;
+            font-size: 2.3em;
+        }
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border: 2px solid #b388ff;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(124, 77, 255, 0.4);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(124, 77, 255, 0.7);
+        }
+        .container {
+            max-width: 600px;
+            margin: 80px auto 0;
+        }
+        .field-label {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #e9dcff;
+        }
+        .input-row {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: 12px;
+            padding: 6px 10px;
+            border: 1px solid rgba(179, 136, 255, 0.4);
+            box-shadow: 0 0 18px rgba(124, 77, 255, 0.35);
+        }
+        .input-prefix {
+            padding: 8px 10px;
+            color: #b388ff;
+            font-weight: 600;
+            text-shadow: 0 0 10px #b388ff;
+            user-select: none;
+        }
+        #usernameInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 1.05em;
+            padding: 8px 6px;
+        }
+        #usernameInput::placeholder {
+            color: rgba(233, 220, 255, 0.45);
+        }
+        .search-btn {
+            margin-left: 10px;
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border: 1px solid #b388ff;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(124, 77, 255, 0.5);
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.8);
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #111325, #181b3a);
+            border: 1px solid rgba(179, 136, 255, 0.35);
+            box-shadow: 0 0 16px rgba(124, 77, 255, 0.3);
+            display: none;
+        }
+        .result-title {
+            font-size: 1.05em;
+            margin-bottom: 8px;
+            color: #b388ff;
+        }
+        .result-text {
+            margin-bottom: 14px;
+            font-size: 1em;
+        }
+        .result-error {
+            color: #ff6b6b;
+        }
+        .result-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .result-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(17, 19, 37, 0.9);
+            border: 1px solid rgba(179, 136, 255, 0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .result-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 14px rgba(179, 136, 255, 0.7);
+            border-color: rgba(224, 195, 252, 0.8);
+        }
+        .result-item.selected {
+            border-color: rgba(129, 199, 132, 0.9);
+            box-shadow: 0 0 18px rgba(129, 199, 132, 0.65);
+        }
+        .result-item-main {
+            font-weight: 600;
+            color: #e9dcff;
+        }
+        .result-item-sub {
+            font-size: 0.9em;
+            color: #b0b0c8;
+            margin-top: 2px;
+        }
+        .confirm-btn {
+            background: linear-gradient(145deg, #4caf50, #81c784);
+            border: 1px solid #81c784;
+            color: #050510;
+            padding: 9px 20px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            cursor: pointer;
+            box-shadow: 0 0 16px rgba(129, 199, 132, 0.7);
+            transition: all 0.25s ease;
+            display: none;
+            margin-top: 10px;
+        }
+        .confirm-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 24px rgba(129, 199, 132, 0.9);
+        }
+        .submit-btn {
+            background: linear-gradient(145deg, #4caf50, #81c784);
+            border: 1px solid #81c784;
+            color: #050510;
+            padding: 9px 20px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            cursor: pointer;
+            box-shadow: 0 0 16px rgba(129, 199, 132, 0.7);
+            transition: all 0.25s ease;
+            margin-top: 5px;
+        }
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 24px rgba(129, 199, 132, 0.9);
+        }
+        .recommend-form {
+            display: none;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(179, 136, 255, 0.35);
+        }
+        .form-status {
+            margin-top: 12px;
+            font-size: 0.95em;
+            color: #b0b0c8;
+        }
+        .form-status.error {
+            color: #ff6b6b;
+        }
+        .form-status.ok {
+            color: #81c784;
+        }
+        .form-row {
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-label {
+            font-size: 0.95em;
+            color: #e9dcff;
+        }
+        .form-input, .form-textarea {
+            background: rgba(10, 11, 30, 0.9);
+            border-radius: 10px;
+            border: 1px solid rgba(179, 136, 255, 0.4);
+            color: #fff;
+            padding: 8px 10px;
+            font-family: inherit;
+            font-size: 0.95em;
+            outline: none;
+        }
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <a href="recommendations.html" class="back-btn">←</a>
+    <h1>Рекомендовать</h1>
+
+    <div class="container">
+        <div class="field-label">Укажите Telegram пользователя, которому хотите выдать рекомендацию</div>
+        <div class="input-row">
+            <div class="input-prefix">@</div>
+            <input id="usernameInput" type="text" placeholder="username" autocomplete="off">
+            <button id="searchBtn" class="search-btn" onclick="searchUser()">Найти</button>
+        </div>
+
+        <div id="resultBox" class="result-box">
+            <div class="result-title">Результат поиска:</div>
+            <div id="resultText" class="result-text"></div>
+            <button id="confirmBtn" class="confirm-btn">Выбрать</button>
+
+            <div id="recommendForm" class="recommend-form">
+                <div class="form-row">
+                    <label for="reasonInput" class="form-label">Причина рекомендации</label>
+                    <textarea id="reasonInput" class="form-textarea" placeholder="Опишите, за что вы рекомендуете этого игрока"></textarea>
+                </div>
+                <div class="form-row">
+                    <label for="positionInput" class="form-label">Должность (на кого рекомендуете)</label>
+                    <input id="positionInput" class="form-input" type="text" placeholder="Например: Модератор, Старший состав">
+                </div>
+                <button id="submitRecBtn" class="submit-btn">Рекомендовать</button>
+                <div id="submitStatus" class="form-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = null;
+        let selectedUser = null;
+        let isLocked = false;
+
+        function ensureUsersLoaded() {
+            if (allUsers !== null) {
+                return Promise.resolve(allUsers);
+            }
+            return fetch('http://93.177.117.241:8000/users/klan')
+                .then(res => res.json())
+                .then(users => {
+                    allUsers = Object.values(users);
+                    return allUsers;
+                })
+                .catch(() => {
+                    allUsers = [];
+                    return allUsers;
+                });
+        }
+
+        function searchUser() {
+            if (isLocked) return;
+
+            const input = document.getElementById('usernameInput');
+            const rawValue = input.value.trim();
+            const username = rawValue.replace(/^@+/, '').toLowerCase();
+            const resultBox = document.getElementById('resultBox');
+            const resultText = document.getElementById('resultText');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const recommendForm = document.getElementById('recommendForm');
+            const reasonInput = document.getElementById('reasonInput');
+            const positionInput = document.getElementById('positionInput');
+            const submitStatus = document.getElementById('submitStatus');
+
+            resultBox.style.display = 'block';
+            confirmBtn.style.display = 'none';
+            recommendForm.style.display = 'none';
+            selectedUser = null;
+            submitStatus.textContent = '';
+            submitStatus.className = 'form-status';
+
+            if (!username) {
+                resultText.textContent = 'Введите username пользователя.';
+                resultText.classList.add('result-error');
+                return;
+            }
+
+            resultText.textContent = 'Поиск пользователя...';
+            resultText.classList.remove('result-error');
+
+            ensureUsersLoaded().then(users => {
+                if (!users.length) {
+                    resultText.textContent = 'Не удалось загрузить список пользователей.';
+                    resultText.classList.add('result-error');
+                    return;
+                }
+
+                // очищаем блок перед выводом
+                resultText.innerHTML = '';
+                resultText.classList.remove('result-error');
+
+                // Примерный поиск: совпадение по части username или PUBG-ника
+                const matches = users.filter(u => {
+                    const uname = (u.username || '').toLowerCase();
+                    const pubgNik = (u.nik_pubg || '').toLowerCase();
+                    return uname === username ||
+                           uname.startsWith(username) ||
+                           uname.includes(username) ||
+                           pubgNik === username ||
+                           pubgNik.startsWith(username) ||
+                           pubgNik.includes(username);
+                });
+
+                if (!matches.length) {
+                    resultText.textContent = 'Пользователь с таким username или ником не найден.';
+                    resultText.classList.add('result-error');
+                    return;
+                }
+
+                // Рендерим выбор: если один — сразу выделяем; если много — показываем список
+                const selectedInfo = document.createElement('div');
+                selectedInfo.id = 'selectedInfo';
+                selectedInfo.style.marginBottom = '10px';
+                selectedInfo.textContent = matches.length === 1
+                    ? 'Найден один пользователь. Нажмите «Выбрать».'
+                    : `Найдено совпадений: ${matches.length}. Нажмите на нужного пользователя, затем «Выбрать».`;
+
+                const list = document.createElement('div');
+                list.className = 'result-list';
+
+                function setSelected(user, itemEl) {
+                    selectedUser = user;
+                    Array.from(list.children).forEach(ch => ch.classList.remove('selected'));
+                    if (itemEl) itemEl.classList.add('selected');
+                    selectedInfo.innerHTML = `Выбрано: <strong>${user.nik_pubg || 'без PUBG ника'}</strong> (@${user.username || 'без username'})`;
+                    confirmBtn.style.display = 'inline-block';
+                }
+
+                matches.forEach(user => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+
+                    const main = document.createElement('div');
+                    main.className = 'result-item-main';
+                    main.textContent = user.nik_pubg || 'без PUBG ника';
+
+                    const sub = document.createElement('div');
+                    sub.className = 'result-item-sub';
+                    sub.textContent = `@${user.username || 'без username'} | Клановый ник: ${user.nik || '-'}`;
+
+                    item.appendChild(main);
+                    item.appendChild(sub);
+
+                    item.onclick = function () {
+                        setSelected(user, item);
+                    };
+
+                    list.appendChild(item);
+                });
+
+                resultText.appendChild(selectedInfo);
+                resultText.appendChild(list);
+
+                if (matches.length === 1) {
+                    // Автовыбор единственного результата (без уведомлений)
+                    setSelected(matches[0], list.children[0]);
+                }
+
+                confirmBtn.onclick = function () {
+                    if (!selectedUser) return;
+
+                    // финализируем выбор: список пропадает, показываем только выбранного
+                    isLocked = true;
+                    resultText.innerHTML = `Выбран пользователь: <strong>${selectedUser.nik_pubg || 'без PUBG ника'}</strong> (@${selectedUser.username || 'без username'})`;
+                    confirmBtn.style.display = 'none';
+
+                    document.getElementById('usernameInput').disabled = true;
+                    document.getElementById('searchBtn').disabled = true;
+
+                    recommendForm.style.display = 'block';
+                    reasonInput.focus();
+                };
+            });
+        }
+
+        document.getElementById('usernameInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchUser();
+            }
+        });
+
+        document.getElementById('submitRecBtn').addEventListener('click', function () {
+            const submitStatus = document.getElementById('submitStatus');
+            submitStatus.textContent = '';
+            submitStatus.className = 'form-status';
+
+            if (!selectedUser || !isLocked) {
+                submitStatus.textContent = 'Сначала выберите пользователя.';
+                submitStatus.classList.add('error');
+                return;
+            }
+
+            const reason = document.getElementById('reasonInput').value.trim();
+            const position = document.getElementById('positionInput').value.trim();
+
+            if (!reason || !position) {
+                submitStatus.textContent = 'Заполните причину и должность.';
+                submitStatus.classList.add('error');
+                return;
+            }
+
+            const payload = {
+                user_id: selectedUser.tg_ids,
+                username: selectedUser.username || null,
+                pubg_nik: selectedUser.nik_pubg || null,
+                reason: reason,
+                position: position
+            };
+
+            fetch('http://93.177.117.241:8000/recom-add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json().catch(() => null))
+            .then(() => {
+                submitStatus.textContent = 'Отправлено.';
+                submitStatus.classList.add('ok');
+            })
+            .catch(() => {
+                submitStatus.textContent = 'Не удалось отправить.';
+                submitStatus.classList.add('error');
+            });
+        });
+    </script>
+</body>
+</html>
+
