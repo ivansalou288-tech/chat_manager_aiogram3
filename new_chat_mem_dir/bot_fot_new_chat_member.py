@@ -67,14 +67,14 @@ def gaid(message):
     bot.send_message(chat_id=message.chat.id,
                      text='Как вступить в клан?\n\n<b>1.</b> Ищешь игрока wePiKAcHy по айди «<code>51445023900</code>» и нажимаешь на его аватарку',
                      parse_mode='html', reply_markup=keyboard)
-    bot.send_media_group(chat_id=message.chat.id, media=[telebot.types.InputMediaPhoto(open('../photos/first_step.jpg', 'rb')), telebot.types.InputMediaPhoto(open(
-        '../photos/second_step.jpg', 'rb'))])
+    bot.send_media_group(chat_id=message.chat.id, media=[telebot.types.InputMediaPhoto(open(f'{curent_path}/photos/first_step.jpg', 'rb')), telebot.types.InputMediaPhoto(open(
+        f'{curent_path}/photos/second_step.jpg', 'rb'))])
     bot.send_message(chat_id=message.chat.id,
                      text='<b>2.</b> В его профиле нажимаешь на аватарку клана «Werty» и в всплышем окне нажимаешь на запрос',
                      parse_mode='html')
     bot.send_media_group(chat_id=message.chat.id,
-                         media=[telebot.types.InputMediaPhoto(open('../photos/therd_step.jpg', 'rb')),
-                                telebot.types.InputMediaPhoto(open('../photos/last_step.jpg', 'rb'))])
+                         media=[telebot.types.InputMediaPhoto(open(f'{curent_path}/photos/therd_step.jpg', 'rb')),
+                                telebot.types.InputMediaPhoto(open(f'{curent_path}/photos/last_step.jpg', 'rb'))])
 
 
 
