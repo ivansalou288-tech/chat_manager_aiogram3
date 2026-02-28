@@ -327,7 +327,7 @@ def get_recom_clan(chat: str):
     rows = cursor.fetchall()
     recomendations = []
     for row in rows:
-        id, user_id, pubg_id, moder, comments, rang, date, recom_id, username, nik_pubg, nik = row
+        id, user_id, pubg_id, moder, comments, rang, date, recom_id = row
         recom = {
             "id": id,
             "user_id": user_id,
@@ -337,9 +337,7 @@ def get_recom_clan(chat: str):
             "rang": rang,
             "date": date,
             "rec_id": recom_id,
-            "username": username,
-            "nik_pubg": nik_pubg,
-            "nik": nik
+
         }
         recomendations.append(recom)
     return recomendations
