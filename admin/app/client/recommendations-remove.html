@@ -5,12 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Снять рекомендацию</title>
     <style>
+        @keyframes slideUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        .closing {
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background: #050510;
             color: #fff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
         }
+
         h1 {
             text-align: center;
             color: #b388ff;
@@ -18,6 +40,7 @@
             margin-bottom: 40px;
             font-size: 2.3em;
         }
+
         .back-btn {
             position: fixed;
             top: 20px;
@@ -34,15 +57,603 @@
             text-decoration: none;
             display: inline-block;
         }
+
         .back-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 0 25px rgba(124, 77, 255, 0.7);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 80px auto 0;
+        }
+
+        .field-label {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #e9dcff;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: 12px;
+            padding: 6px 10px;
+            border: 1px solid rgba(179, 136, 255, 0.4);
+            box-shadow: 0 0 18px rgba(124, 77, 255, 0.35);
+        }
+
+        .input-prefix {
+            padding: 8px 10px;
+            color: #b388ff;
+            font-weight: 600;
+            text-shadow: 0 0 10px #b388ff;
+            user-select: none;
+        }
+
+        #usernameInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 1.05em;
+            padding: 8px 6px;
+        }
+
+        #usernameInput::placeholder {
+            color: rgba(233, 220, 255, 0.45);
+        }
+
+        .search-btn {
+            margin-left: 10px;
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border: 1px solid #b388ff;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(124, 77, 255, 0.5);
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.8);
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #111325, #181b3a);
+            border: 1px solid rgba(179, 136, 255, 0.35);
+            box-shadow: 0 0 16px rgba(124, 77, 255, 0.3);
+            display: none;
+        }
+
+        .result-title {
+            font-size: 1.05em;
+            margin-bottom: 8px;
+            color: #b388ff;
+        }
+
+        .result-text {
+            margin-bottom: 14px;
+            font-size: 1em;
+        }
+
+        .result-error {
+            color: #ff6b6b;
+        }
+
+        .result-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .result-item {
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(17, 19, 37, 0.9);
+            border: 1px solid rgba(179, 136, 255, 0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .result-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 14px rgba(179, 136, 255, 0.7);
+            border-color: rgba(224, 195, 252, 0.8);
+        }
+
+        .result-item.selected {
+            border-color: rgba(129, 199, 132, 0.9);
+            box-shadow: 0 0 18px rgba(129, 199, 132, 0.65);
+        }
+
+        .result-item-main {
+            font-weight: 600;
+            color: #e9dcff;
+        }
+
+        .result-item-sub {
+            font-size: 0.9em;
+            color: #b0b0c8;
+            margin-top: 4px;
+        }
+
+        .rec-card {
+            padding: 14px;
+            border-radius: 10px;
+            background: linear-gradient(145deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
+            border: 1px solid rgba(179, 136, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .rec-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 16px rgba(179, 136, 255, 0.5);
+            border-color: rgba(224, 195, 252, 0.6);
+        }
+
+        .rec-card.selected {
+            background: linear-gradient(145deg, rgba(76, 175, 80, 0.15), rgba(129, 199, 132, 0.15));
+            border-color: rgba(129, 199, 132, 0.8);
+            box-shadow: 0 0 20px rgba(129, 199, 132, 0.4);
+        }
+
+        .rec-position {
+            font-weight: 700;
+            color: #b388ff;
+            font-size: 1.05em;
+            margin-bottom: 6px;
+        }
+
+        .rec-reason {
+            font-size: 0.9em;
+            color: #d0d0e0;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        .rec-meta {
+            font-size: 0.8em;
+            color: #8080a0;
+            padding-top: 8px;
+            border-top: 1px solid rgba(179, 136, 255, 0.2);
+        }
+
+        .confirm-btn, .remove-btn {
+            background: linear-gradient(145deg, #ff6b6b, #ff5252);
+            border: 1px solid #ff5252;
+            color: #fff;
+            padding: 9px 20px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            cursor: pointer;
+            box-shadow: 0 0 16px rgba(255, 82, 82, 0.7);
+            transition: all 0.25s ease;
+            display: none;
+            margin-top: 10px;
+        }
+
+        .confirm-btn:hover, .remove-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 24px rgba(255, 82, 82, 0.9);
+        }
+
+        .confirm-btn {
+            display: inline-block;
+            background: linear-gradient(145deg, #4caf50, #81c784);
+            border: 1px solid #81c784;
+            color: #050510;
+            box-shadow: 0 0 16px rgba(129, 199, 132, 0.7);
+        }
+
+        .confirm-btn:hover {
+            box-shadow: 0 0 24px rgba(129, 199, 132, 0.9);
+        }
+
+        .remove-form {
+            display: none;
+            margin-top: 25px;
+            padding: 15px;
+            border-top: 1px solid rgba(179, 136, 255, 0.35);
+            background: rgba(255, 82, 82, 0.08);
+            border-radius: 10px;
+        }
+
+        .form-status {
+            margin-top: 12px;
+            font-size: 0.95em;
+            color: #b0b0c8;
+        }
+
+        .form-status.error {
+            color: #ff6b6b;
+        }
+
+        .form-status.ok {
+            color: #81c784;
+        }
+
+        .selected-rec-info {
+            margin-bottom: 15px;
+            padding: 14px;
+            background: linear-gradient(145deg, rgba(76, 175, 80, 0.1), rgba(129, 199, 132, 0.1));
+            border: 1px solid rgba(129, 199, 132, 0.5);
+            border-radius: 8px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .selected-rec-info-label {
+            color: #81c784;
+            font-weight: 700;
+        }
+
+        .selected-rec-info strong {
+            color: #b388ff;
         }
     </style>
 </head>
 <body>
     <a href="recommendations.html" class="back-btn">←</a>
     <h1>Снять рекомендацию</h1>
+
+    <div class="container">
+        <div class="field-label">Укажите Telegram пользователя, у которого хотите снять рекомендацию</div>
+        <div class="input-row">
+            <div class="input-prefix">@</div>
+            <input id="usernameInput" type="text" placeholder="username" autocomplete="off">
+            <button id="searchBtn" class="search-btn" onclick="searchUser()">Найти</button>
+        </div>
+
+        <div id="resultBox" class="result-box">
+            <div class="result-title">Результат поиска:</div>
+            <div id="resultText" class="result-text"></div>
+            <button id="confirmBtn" class="confirm-btn" style="margin-top: 10px;">Выбрать</button>
+
+            <div id="removeForm" class="remove-form">
+                <div class="result-title">Рекомендации пользователя:</div>
+                <div id="recsList" class="result-list"></div>
+                <div id="selectedRecInfo" class="selected-rec-info" style="display: none;"></div>
+                <button id="removeRecBtn" class="remove-btn" style="display: none; margin-top: 15px;">Удалить рекомендацию</button>
+                <div id="removeStatus" class="form-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = null;
+        let selectedUser = null;
+        let selectedRec = null;
+        let isLocked = false;
+
+        function ensureUsersLoaded() {
+            if (allUsers !== null) {
+                return Promise.resolve(allUsers);
+            }
+            return fetch('http://93.177.117.241:8000/users/klan')
+                .then(res => res.json())
+                .then(users => {
+                    allUsers = Object.values(users);
+                    return allUsers;
+                })
+                .catch(() => {
+                    allUsers = [];
+                    return allUsers;
+                });
+        }
+
+        function searchUser() {
+            if (isLocked) return;
+
+            const input = document.getElementById('usernameInput');
+            const rawValue = input.value.trim();
+            const username = rawValue.replace(/^@+/, '').toLowerCase();
+            const resultBox = document.getElementById('resultBox');
+            const resultText = document.getElementById('resultText');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const removeForm = document.getElementById('removeForm');
+            const removeStatus = document.getElementById('removeStatus');
+
+            resultBox.style.display = 'block';
+            confirmBtn.style.display = 'none';
+            removeForm.style.display = 'none';
+            selectedUser = null;
+            selectedRec = null;
+            removeStatus.textContent = '';
+            removeStatus.className = 'form-status';
+
+            if (!username) {
+                resultText.textContent = 'Введите username пользователя.';
+                resultText.classList.add('result-error');
+                return;
+            }
+
+            resultText.textContent = 'Поиск пользователя...';
+            resultText.classList.remove('result-error');
+
+            ensureUsersLoaded().then(users => {
+                if (!users.length) {
+                    resultText.textContent = 'Не удалось загрузить список пользователей.';
+                    resultText.classList.add('result-error');
+                    return;
+                }
+
+                resultText.innerHTML = '';
+                resultText.classList.remove('result-error');
+
+                const matches = users.filter(u => {
+                    const uname = (u.username || '').toLowerCase();
+                    const pubgNik = (u.nik_pubg || '').toLowerCase();
+                    return uname === username ||
+                           uname.startsWith(username) ||
+                           uname.includes(username) ||
+                           pubgNik === username ||
+                           pubgNik.startsWith(username) ||
+                           pubgNik.includes(username);
+                });
+
+                if (!matches.length) {
+                    resultText.textContent = 'Пользователь с таким username или ником не найден.';
+                    resultText.classList.add('result-error');
+                    return;
+                }
+
+                const selectedInfo = document.createElement('div');
+                selectedInfo.id = 'selectedInfo';
+                selectedInfo.style.marginBottom = '10px';
+                selectedInfo.textContent = matches.length === 1
+                    ? 'Найден один пользователь. Нажмите «Выбрать».'
+                    : `Найдено совпадений: ${matches.length}. Нажмите на нужного пользователя, затем «Выбрать».`;
+
+                const list = document.createElement('div');
+                list.className = 'result-list';
+
+                function setSelected(user, itemEl) {
+                    selectedUser = user;
+                    selectedRec = null;
+                    Array.from(list.children).forEach(ch => ch.classList.remove('selected'));
+                    if (itemEl) itemEl.classList.add('selected');
+                    selectedInfo.innerHTML = `Выбрано: <strong>${user.nik_pubg || 'без PUBG ника'}</strong> (@${user.username || 'без username'})`;
+                    confirmBtn.style.display = 'inline-block';
+                }
+
+                matches.forEach(user => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+
+                    const main = document.createElement('div');
+                    main.className = 'result-item-main';
+                    main.textContent = user.nik_pubg || 'без PUBG ника';
+
+                    const sub = document.createElement('div');
+                    sub.className = 'result-item-sub';
+                    sub.textContent = `@${user.username || 'без username'} | Клановый ник: ${user.nik || '-'}`;
+
+                    item.appendChild(main);
+                    item.appendChild(sub);
+
+                    item.onclick = function () {
+                        setSelected(user, item);
+                    };
+
+                    list.appendChild(item);
+                });
+
+                resultText.appendChild(selectedInfo);
+                resultText.appendChild(list);
+
+                if (matches.length === 1) {
+                    setSelected(matches[0], list.children[0]);
+                }
+
+                confirmBtn.onclick = function () {
+                    if (!selectedUser) return;
+
+                    isLocked = true;
+                    resultText.innerHTML = `Выбран пользователь: <strong>${selectedUser.nik_pubg || 'без PUBG ника'}</strong> (@${selectedUser.username || 'без username'})`;
+                    confirmBtn.style.display = 'none';
+
+                    document.getElementById('usernameInput').disabled = true;
+                    document.getElementById('searchBtn').disabled = true;
+
+                    loadUserRecommendations();
+                    removeForm.style.display = 'block';
+                };
+            });
+        }
+
+        function loadUserRecommendations() {
+            if (!selectedUser) return;
+
+            const recsList = document.getElementById('recsList');
+            const removeStatus = document.getElementById('removeStatus');
+            const removeRecBtn = document.getElementById('removeRecBtn');
+
+            recsList.innerHTML = '<div style="color: #b0b0c8; padding: 20px; text-align: center;">Загрузка рекомендаций...</div>';
+            removeRecBtn.style.display = 'none';
+            removeStatus.textContent = '';
+
+            fetch(`http://93.177.117.241:8000/recom/${selectedUser.tg_ids}`)
+                .then(res => res.json())
+                .then(recs => {
+                    recsList.innerHTML = '';
+
+                    if (!recs || recs.length === 0) {
+                        recsList.innerHTML = '<div style="color: #b0b0c8; padding: 20px; text-align: center;">У этого пользователя нет рекомендаций.</div>';
+                        return;
+                    }
+
+                    // Нормализуем данные - проверяем разные возможные структуры
+                    const normalizedRecs = recs.map(rec => {
+                        return {
+                            position: rec.rang || rec.должность || '—',
+                            reason: rec.reason || rec.причина || rec.описание || '—',
+                            from_admin: rec.moder || rec.админ || '—',
+                            date: rec.date || rec.дата || '',
+                            original: rec
+                        };
+                    });
+
+                    normalizedRecs.forEach((rec, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'rec-card';
+                        item.dataset.recIndex = index;
+
+                        const position = document.createElement('div');
+                        position.className = 'rec-position';
+                        position.textContent = rec.position;
+
+                        const reason = document.createElement('div');
+                        reason.className = 'rec-reason';
+                        reason.textContent = rec.reason;
+
+                        item.appendChild(position);
+                        item.appendChild(reason);
+
+                        // Добавляем метаинформацию если есть
+                        if (rec.from_admin || rec.date) {
+                            const meta = document.createElement('div');
+                            meta.className = 'rec-meta';
+                            meta.innerHTML = '';
+                            if (rec.from_admin && rec.from_admin !== '—') {
+                                meta.innerHTML += `От: ${rec.from_admin}`;
+                            }
+                            if (rec.date) {
+                                if (meta.innerHTML) meta.innerHTML += ' • ';
+                                meta.innerHTML += rec.date;
+                            }
+                            if (meta.innerHTML) {
+                                item.appendChild(meta);
+                            }
+                        }
+
+                        item.onclick = function () {
+                            selectRecommendation(rec, item);
+                        };
+
+                        recsList.appendChild(item);
+                    });
+                })
+                .catch(err => {
+                    console.error('Ошибка загрузки рекомендаций:', err);
+                    recsList.innerHTML = '<div style="color: #ff6b6b; padding: 20px; text-align: center;">Не удалось загрузить рекомендации.</div>';
+                });
+        }
+
+        function selectRecommendation(rec, itemEl) {
+            selectedRec = rec;
+
+            Array.from(document.getElementById('recsList').children).forEach(ch => {
+                ch.classList.remove('selected');
+            });
+            itemEl.classList.add('selected');
+
+            const selectedRecInfo = document.getElementById('selectedRecInfo');
+            let infoHtml = `
+                <span class="selected-rec-info-label">✓ Выбрана рекомендация:</span><br>
+                <strong>На должность:</strong> ${rec.position}<br>
+                <strong>Причина:</strong> ${rec.reason}
+            `;
+            if (rec.from_admin && rec.from_admin !== '—') {
+                infoHtml += `<br><strong>От администратора:</strong> ${rec.from_admin}`;
+            }
+            selectedRecInfo.innerHTML = infoHtml;
+            selectedRecInfo.style.display = 'block';
+
+            document.getElementById('removeRecBtn').style.display = 'inline-block';
+        }
+
+        document.getElementById('usernameInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchUser();
+            }
+        });
+
+        document.getElementById('removeRecBtn').addEventListener('click', function () {
+            const removeStatus = document.getElementById('removeStatus');
+            removeStatus.textContent = '';
+            removeStatus.className = 'form-status';
+
+            if (!selectedUser || !selectedRec || !isLocked) {
+                removeStatus.textContent = 'Выберите рекомендацию для удаления.';
+                removeStatus.classList.add('error');
+                return;
+            }
+
+            const payload = {
+                rec_id: selectedRec.original.rec_id,
+                user_id: selectedUser.tg_ids
+            };
+
+            console.log('Отправляю запрос на удаление:', payload);
+
+            fetch('http://93.177.117.241:8000/recom-remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json().catch(() => null))
+            .then(resp => {
+                console.log('Ответ сервера:', resp);
+                const resultBox = document.getElementById('resultBox');
+                const removeForm = document.getElementById('removeForm');
+
+                removeForm.classList.add('closing');
+                resultBox.classList.add('closing');
+
+                removeStatus.textContent = '✓';
+                removeStatus.classList.add('ok');
+                removeStatus.style.fontSize = '2em';
+                removeStatus.style.marginTop = '20px';
+                removeStatus.style.textAlign = 'center';
+
+                setTimeout(() => {
+                    resultBox.style.display = 'none';
+                    removeForm.style.display = 'none';
+                    resultBox.classList.remove('closing');
+                    removeForm.classList.remove('closing');
+
+                    setTimeout(() => {
+                        removeStatus.textContent = '';
+                        removeStatus.className = 'form-status';
+                        removeStatus.style.fontSize = '0.95em';
+                        removeStatus.style.marginTop = '12px';
+                        removeStatus.style.textAlign = 'left';
+
+                        document.getElementById('usernameInput').disabled = false;
+                        document.getElementById('searchBtn').disabled = false;
+                        document.getElementById('usernameInput').value = '';
+                        document.getElementById('usernameInput').focus();
+
+                        selectedUser = null;
+                        selectedRec = null;
+                        isLocked = false;
+
+                        document.getElementById('recsList').innerHTML = '';
+                        document.getElementById('selectedRecInfo').style.display = 'none';
+                        document.getElementById('removeRecBtn').style.display = 'none';
+                    }, 2000);
+                }, 500);
+            })
+            .catch(err => {
+                console.error('Ошибка при удалении:', err);
+                removeStatus.textContent = 'Не удалось удалить рекомендацию.';
+                removeStatus.classList.add('error');
+            });
+        });
+    </script>
 </body>
 </html>
 

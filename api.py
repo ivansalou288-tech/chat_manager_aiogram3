@@ -16,6 +16,10 @@ import main.secret
 TOKEN = main.secret.main_token
 
 bot = Bot(token=TOKEN)
+class RecomRemoveAction(BaseModel):
+    rec_id: str
+    user_id: int
+
 class UserAction(BaseModel):
     chat: str
     userid: str
@@ -312,6 +316,14 @@ def get_recom(user: int):
         recomendations.append(recom)
     return recomendations
 
+@app.post('/recom-remove')
+def recom_remove(action: RecomRemoveAction):
+    print(f"Removing recommendation: rec_id={action.rec_id}, user_id={action.user_id}")
+    connection = sqlite3.connect(main_path, check_same_thread=False)
+    cursor = connection.cursor()
+    cursor.execute('DELETE FROM recommendation WHERE recom_id = ?', (action.rec_id,))
+    connection.commit()
+    return {"status": "ok"}
 
 @app.post('/recom-add')
 def recom_add(action: RecomAddAction):
