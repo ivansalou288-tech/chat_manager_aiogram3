@@ -71,7 +71,25 @@
             border-top: 1px solid rgba(179, 136, 255, 0.3);
             font-size: 0.85em;
             color: #a0a0b0;
-            display: none;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+        .delete-btn {
+            background: linear-gradient(145deg, #ff6b6b, #ff5252);
+            border: 1px solid #ff5252;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        .delete-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 82, 82, 0.8);
         }
         .back-btn {
             position: fixed;
@@ -109,28 +127,98 @@
                     <div class="rec-reason">${rec.reason}</div>
                     <div class="rec-expanded">
                         <div>Дата: ${rec.date}</div>
-                        <div>Модератор: ${rec.moder}</div>
+                        <div>Модератор: ${rec.moderLink ? `<a href="${rec.moderLink}" style="color: #81c784; text-decoration: none;">${rec.moderNick}</a>` : rec.moderNick}</div>
                         <div>ID: ${rec.rec_id}</div>
+                        <button onclick="deleteRec(this, ${rec.rec_id}, ${rec.user_id})" class="delete-btn">Удалить</button>
                     </div>
                 </div>`
             ).join('');
         }
 
         function toggleExpand(card) {
-            const expanded = card.querySelector('.rec-expanded');
-            card.classList.toggle('expanded');
-            expanded.style.display = expanded.style.display === 'none' || expanded.style.display === '' ? 'block' : 'none';
+            // Collapse all other expanded cards
+            document.querySelectorAll('.rec-card.expanded').forEach(c => {
+                if (c !== card) {
+                    c.classList.remove('expanded');
+                    const exp = c.querySelector('.rec-expanded');
+                    exp.style.maxHeight = '0';
+                    exp.style.opacity = '0';
+                }
+            });
+            // Toggle the current card
+            const exp = card.querySelector('.rec-expanded');
+            if (card.classList.contains('expanded')) {
+                card.classList.remove('expanded');
+                exp.style.maxHeight = '0';
+                exp.style.opacity = '0';
+            } else {
+                card.classList.add('expanded');
+                exp.style.maxHeight = '250px';
+                exp.style.opacity = '1';
+            }
         }
 
-        fetch('http://93.177.117.241:8000/recom-clan/klan')
-            .then(res => res.json())
-            .then(recoms => {
-                renderRecoms(recoms);
-            })
-            .catch(err => {
-                console.error('Ошибка загрузки рекомендаций:', err);
-                document.getElementById('recoms').innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 50px;">Не удалось загрузить рекомендации.</div>';
+        function deleteRec(btn, id, userId) {
+            if (!confirm('Удалить рекомендацию?')) return;
+
+            fetch('http://45.138.102.75:8000/recom-remove', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({rec_id: id, user_id: userId})
+            }).then(async r => {
+                if (r.ok) {
+                    location.reload();
+                    return;
+                }
+                const text = await r.text().catch(() => '');
+                alert('Ошибка при удалении: ' + (text || r.status));
+            }).catch(() => {
+                alert('Ошибка при удалении');
             });
+        }
+
+        async function loadRecommendations() {
+            try {
+                const [recomRes, usersRes] = await Promise.all([
+                    fetch('http://45.138.102.75:8000/recom-clan/klan'),
+                    fetch('http://45.138.102.75:8000/users/klan')
+                ]);
+                const recoms = await recomRes.json();
+                const usersObj = await usersRes.json();
+                const users = Object.values(usersObj);
+
+                // Map user info to recommendations
+                recoms.forEach(rec => {
+                    const user = users.find(u => u.tg_ids == rec.user_id);
+                    if (user) {
+                        rec.username = user.username || 'без username';
+                        rec.nik = user.nik_pubg || user.nik || 'без ника';
+                    } else {
+                        rec.username = 'без username';
+                        rec.nik = 'без ника';
+                    }
+                    // Handle moderator
+                    if (!isNaN(parseInt(rec.moder))) {
+                        const moderUser = users.find(u => u.tg_ids == rec.moder);
+                        if (moderUser) {
+                            rec.moderNick = moderUser.nik_pubg || moderUser.nik || moderUser.username || 'Модератор';
+                            rec.moderLink = `user-detail.html?chat=klan&id=${rec.moder}`;
+                        } else {
+                            rec.moderNick = rec.moder;
+                        }
+                    } else {
+                        rec.moderNick = rec.moder;
+                    }
+                });
+
+                renderRecoms(recoms);
+            } catch (err) {
+                console.error('Ошибка загрузки данных:', err);
+                document.getElementById('recoms').innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 50px;">Не удалось загрузить рекомендации.</div>';
+            }
+        }
+
+        loadRecommendations();
     </script>
 </body>
 </html>

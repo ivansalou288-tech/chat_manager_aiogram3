@@ -404,7 +404,7 @@
         
         document.getElementById('backBtn').href = `users.html?chat=${chat}`;
         
-        fetch(`http://93.177.117.241:8000/users/${chat}`)
+        fetch(`http://45.138.102.75:8000/users/${chat}`)
             .then(res => res.json())
             .then(users => {
                 const user = Object.values(users).find(u => u.tg_ids == userId);
@@ -445,7 +445,7 @@
         
         function banUser() {
             const reason = document.getElementById('banReason').value;
-            fetch('http://93.177.117.241:8000/ban', {
+            fetch('http://45.138.102.75:8000/ban', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat: chat, userid: userId, reason: reason })
@@ -459,7 +459,7 @@
         }
         
         function deleteUser() {
-            fetch('http://93.177.117.241:8000/dell', {
+            fetch('http://45.138.102.75:8000/dell', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat: chat, userid: userId })
@@ -473,7 +473,7 @@
         }
         
         function fullDeleteUser() {
-            fetch('http://93.177.117.241:8000/full_dell', {
+            fetch('http://45.138.102.75:8000/full_dell', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat: chat, userid: userId })
@@ -487,7 +487,7 @@
         }
         
         function loadWarnings() {
-            fetch(`http://93.177.117.241:8000/warns/${chat}/${userId}`)
+            fetch(`http://45.138.102.75:8000/warns/${chat}/${userId}`)
                 .then(res => res.json())
                 .then(data => {
                     const userCard = document.getElementById('userCard');
@@ -561,7 +561,7 @@
                                 e.stopPropagation();
                                 const btn = e.currentTarget;
                                 const warnNum = parseInt(btn.getAttribute('data-warn-num')) || num;
-                                fetch('http://93.177.117.241:8000/snat_warn', {
+                                fetch('http://45.138.102.75:8000/snat_warn', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ chat: chat, userid: userId, num: warnNum })
@@ -610,7 +610,7 @@
         }
 
         function loadRecommendations() {
-            fetch(`http://93.177.117.241:8000/recom/${userId}`)
+            fetch(`http://45.138.102.75:8000/recom/${userId}`)
                 .then(res => res.json())
                 .then(data => {
                     const userCard = document.getElementById('userCard');
