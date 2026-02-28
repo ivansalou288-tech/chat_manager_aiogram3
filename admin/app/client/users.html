@@ -64,7 +64,11 @@
             font-weight: bold;
         }
         .buttons {
-            text-align: center;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
             margin-bottom: 30px;
         }
         .btn {
@@ -72,7 +76,6 @@
             border: 2px solid #b388ff;
             color: #fff;
             padding: 15px 30px;
-            margin: 0 10px;
             border-radius: 10px;
             font-size: 1.1em;
             cursor: pointer;
@@ -107,11 +110,53 @@
             transform: scale(1.05);
             box-shadow: 0 0 25px rgba(124, 77, 255, 0.7);
         }
+        .field-label {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #e9dcff;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: 12px;
+            padding: 6px 10px;
+            border: 1px solid rgba(179, 136, 255, 0.4);
+            box-shadow: 0 0 18px rgba(124, 77, 255, 0.35);
+        }
+
+        .input-prefix {
+            padding: 8px 10px;
+            color: #b388ff;
+            font-weight: 600;
+            text-shadow: 0 0 10px #b388ff;
+            user-select: none;
+        }
+
+        #searchInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 1.05em;
+            padding: 8px 6px;
+        }
+
+        #searchInput::placeholder {
+            color: rgba(233, 220, 255, 0.45);
+        }
     </style>
 </head>
 <body>
     <a href="index.html" class="back-btn">←</a>
     <h1>Список пользователей</h1>
+    <div class="field-label">Поиск пользователей:</div>
+    <div class="input-row">
+        <div class="input-prefix">@</div>
+        <input id="searchInput" type="text" placeholder="username или ник" autocomplete="off">
+    </div>
     <div class="buttons">
         <button class="btn active" onclick="loadUsers('klan')">Клан</button>
         <button class="btn" onclick="loadUsers('sost-1')">Первый состав</button>
@@ -126,6 +171,12 @@
         let currentChat = chat;
         let isSorted = false;
         let currentUsers = [];
+        let searchTerm = '';
+        
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            searchTerm = e.target.value.trim().toLowerCase();
+            renderFilteredUsers();
+        });
         
         // Функция для преобразования даты в миллисекунды для сравнения
         function parseDateToMs(dateString) {
@@ -199,20 +250,35 @@
             ).join('');
         }
         
+        function renderFilteredUsers() {
+            let usersToRender = [...currentUsers];
+            
+            if (searchTerm) {
+                usersToRender = usersToRender.filter(u => {
+                    const uname = (u.username || '').toLowerCase();
+                    const nik = (u.nik || '').toLowerCase();
+                    return uname.includes(searchTerm) || nik.includes(searchTerm);
+                });
+            }
+            
+            if (isSorted) {
+                usersToRender.sort((a, b) => parseDateToMs(a.last_date) - parseDateToMs(b.last_date));
+            }
+            
+            renderUsers(usersToRender);
+        }
+        
         function toggleSort() {
             isSorted = !isSorted;
             const sortBtn = document.getElementById('sortBtn');
             
-            let usersToRender = [...currentUsers];
-            
             if (isSorted) {
                 sortBtn.classList.add('active');
-                usersToRender.sort((a, b) => parseDateToMs(a.last_date) - parseDateToMs(b.last_date));
             } else {
                 sortBtn.classList.remove('active');
             }
             
-            renderUsers(usersToRender);
+            renderFilteredUsers();
         }
         
         function loadUsers(chatName) {
@@ -226,7 +292,7 @@
                 .then(res => res.json())
                 .then(users => {
                     currentUsers = Object.values(users);
-                    renderUsers(currentUsers);
+                    renderFilteredUsers();
                 });
         }
         
