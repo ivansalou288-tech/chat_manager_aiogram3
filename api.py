@@ -323,7 +323,7 @@ def get_recom_clan(chat: str):
     chat_id = chats_names[chat]
     connection = sqlite3.connect(main_path, check_same_thread=False)
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM recomendation')
+    cursor.execute('SELECT * FROM recommendation')
     rows = cursor.fetchall()
     recomendations = []
     for row in rows:
