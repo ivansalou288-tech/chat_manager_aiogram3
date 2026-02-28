@@ -316,6 +316,38 @@ def get_recom(user: int):
         recomendations.append(recom)
     return recomendations
 
+@app.get('/recom-clan/{chat}')
+def get_recom_clan(chat: str):
+    if chat not in chats_names:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    chat_id = chats_names[chat]
+    connection = sqlite3.connect(main_path, check_same_thread=False)
+    cursor = connection.cursor()
+    query = f'''
+    SELECT r.id, r.user_id, r.pubg_id, r.moder, r.comments, r.rang, r.date, r.recom_id, u.username, u.nik_pubg, u.nik
+    FROM recommendation r
+    JOIN [{chat_id}] u ON r.user_id = u.tg_id
+    '''
+    rows = cursor.fetchall()
+    recomendations = []
+    for row in rows:
+        id, user_id, pubg_id, moder, comments, rang, date, recom_id, username, nik_pubg, nik = row
+        recom = {
+            "id": id,
+            "user_id": user_id,
+            "pubg_id": pubg_id,
+            "moder": moder,
+            "reason": comments,
+            "rang": rang,
+            "date": date,
+            "rec_id": recom_id,
+            "username": username,
+            "nik_pubg": nik_pubg,
+            "nik": nik
+        }
+        recomendations.append(recom)
+    return recomendations
+
 @app.post('/recom-remove')
 def recom_remove(action: RecomRemoveAction):
     print(f"Removing recommendation: rec_id={action.rec_id}, user_id={action.user_id}")

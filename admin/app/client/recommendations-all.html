@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Все рекомендации клана</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            background: #050510;
+            background: #0a0a0a;
             color: #fff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
@@ -15,8 +20,58 @@
             text-align: center;
             color: #b388ff;
             text-shadow: 0 0 20px #b388ff, 0 0 40px #7c4dff;
-            margin-bottom: 40px;
-            font-size: 2.3em;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        #recoms {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+        .rec-card {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 2px solid #7c4dff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.3), inset 0 0 20px rgba(124, 77, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .rec-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(124, 77, 255, 0.6), inset 0 0 30px rgba(124, 77, 255, 0.2);
+            border-color: #b388ff;
+        }
+        .rec-card.expanded {
+            border-color: #81c784;
+            box-shadow: 0 0 30px rgba(129, 199, 132, 0.6), inset 0 0 30px rgba(129, 199, 132, 0.2);
+        }
+        .rec-user {
+            font-size: 1.2em;
+            color: #b388ff;
+            text-shadow: 0 0 10px #b388ff;
+            margin-bottom: 10px;
+        }
+        .rec-position {
+            font-weight: 700;
+            color: #b388ff;
+            font-size: 1.05em;
+            margin-bottom: 6px;
+        }
+        .rec-reason {
+            font-size: 0.9em;
+            color: #d0d0e0;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+        .rec-expanded {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(179, 136, 255, 0.3);
+            font-size: 0.85em;
+            color: #a0a0b0;
+            display: none;
         }
         .back-btn {
             position: fixed;
@@ -43,6 +98,40 @@
 <body>
     <a href="recommendations.html" class="back-btn">←</a>
     <h1>Все рекомендации клана</h1>
+    <div id="recoms"></div>
+
+    <script>
+        function renderRecoms(recoms) {
+            document.getElementById('recoms').innerHTML = recoms.map(rec =>
+                `<div class="rec-card" onclick="toggleExpand(this)">
+                    <div class="rec-user">${rec.nik || 'без ника'} (@${rec.username || 'без username'})</div>
+                    <div class="rec-position">На должность: ${rec.rang}</div>
+                    <div class="rec-reason">${rec.reason}</div>
+                    <div class="rec-expanded">
+                        <div>Дата: ${rec.date}</div>
+                        <div>Модератор: ${rec.moder}</div>
+                        <div>ID: ${rec.rec_id}</div>
+                    </div>
+                </div>`
+            ).join('');
+        }
+
+        function toggleExpand(card) {
+            const expanded = card.querySelector('.rec-expanded');
+            card.classList.toggle('expanded');
+            expanded.style.display = expanded.style.display === 'none' || expanded.style.display === '' ? 'block' : 'none';
+        }
+
+        fetch('http://93.177.117.241:8000/recom-clan/klan')
+            .then(res => res.json())
+            .then(recoms => {
+                renderRecoms(recoms);
+            })
+            .catch(err => {
+                console.error('Ошибка загрузки рекомендаций:', err);
+                document.getElementById('recoms').innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 50px;">Не удалось загрузить рекомендации.</div>';
+            });
+    </script>
 </body>
 </html>
 
