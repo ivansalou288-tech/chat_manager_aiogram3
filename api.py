@@ -18,7 +18,7 @@ TOKEN = main.secret.main_token
 bot = Bot(token=TOKEN)
 class RecomRemoveAction(BaseModel):
     rec_id: str
-    user_id: int
+    user_id: int | None = None
 
 class UserAction(BaseModel):
     chat: str
@@ -347,9 +347,15 @@ def recom_remove(action: RecomRemoveAction):
     print(f"Removing recommendation: rec_id={action.rec_id}, user_id={action.user_id}")
     connection = sqlite3.connect(main_path, check_same_thread=False)
     cursor = connection.cursor()
-    cursor.execute('DELETE FROM recommendation WHERE recom_id = ?', (action.rec_id,))
+    if action.user_id is None:
+        cursor.execute('DELETE FROM recommendation WHERE recom_id = ?', (action.rec_id,))
+    else:
+        cursor.execute('DELETE FROM recommendation WHERE recom_id = ? AND user_id = ?', (action.rec_id, action.user_id))
+    deleted = cursor.rowcount
     connection.commit()
-    return {"status": "ok"}
+    if deleted == 0:
+        raise HTTPException(status_code=404, detail="Recommendation not found")
+    return {"status": "ok", "deleted": deleted}
 
 @app.post('/recom-add')
 def recom_add(action: RecomAddAction):

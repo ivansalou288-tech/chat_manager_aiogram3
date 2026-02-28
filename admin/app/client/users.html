@@ -288,7 +288,7 @@
             document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            fetch(`http://93.177.117.241:8000/users/${chatName}`)
+            fetch(`http://45.138.102.75:8000/users/${chatName}`)
                 .then(res => res.json())
                 .then(users => {
                     currentUsers = Object.values(users);

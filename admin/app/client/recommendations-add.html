@@ -282,7 +282,7 @@
             if (allUsers !== null) {
                 return Promise.resolve(allUsers);
             }
-            return fetch('http://93.177.117.241:8000/users/klan')
+            return fetch('http://45.138.102.75:8000/users/klan')
                 .then(res => res.json())
                 .then(users => {
                     allUsers = Object.values(users);
@@ -454,7 +454,7 @@
                 position: position
             };
 
-            fetch('http://93.177.117.241:8000/recom-add', {
+            fetch('http://45.138.102.75:8000/recom-add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
