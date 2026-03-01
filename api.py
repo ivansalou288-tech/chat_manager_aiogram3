@@ -397,6 +397,17 @@ def create_link(action: CreateLinkAction):
     return {"link": link, "activate_count": activate_count, "sost": sost}
 
 
+@app.get('/all-links')
+def get_all_links():
+    connection = sqlite3.connect(datahelp_path, check_same_thread=False)
+    cursor = connection.cursor()
+    cursor.execute('SELECT link_text, activate_count, sost FROM links_for_sosts')
+    rows = cursor.fetchall()
+    connection.close()
+    links = [{"link": row[0], "activate_count": row[1], "sost": row[2]} for row in rows]
+    return links
+
+
 @app.get('/warns/{chat}/{user}')
 async def get_warns(chat: str, user: int):
     connection = sqlite3.connect(warn_path, check_same_thread=False)

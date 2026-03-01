@@ -37,29 +37,51 @@
             padding: 30px;
             box-shadow: 0 0 20px rgba(124, 77, 255, 0.3);
         }
-        .form-group {
+        .selector-group {
             margin-bottom: 20px;
         }
-        label {
+        .selector-label {
             display: block;
             margin-bottom: 10px;
             color: #b388ff;
             font-size: 1.1em;
         }
-        select {
-            width: 100%;
-            padding: 12px;
+        .selector-buttons {
+            position: relative;
+            display: flex;
+            background: #1a1a2e;
             border: 2px solid #7c4dff;
-            border-radius: 8px;
-            background: #0a0a0a;
-            color: #fff;
-            font-size: 1em;
+            border-radius: 10px;
+            overflow: hidden;
             box-shadow: 0 0 10px rgba(124, 77, 255, 0.2);
         }
-        select:focus {
-            outline: none;
-            border-color: #b388ff;
-            box-shadow: 0 0 15px rgba(179, 136, 255, 0.5);
+        .selector-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: #fff;
+            font-size: 1em;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        .selector-btn:hover {
+            color: #b388ff;
+        }
+        .selector-btn.active {
+            color: #050510;
+        }
+        .selector-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+            z-index: 0;
         }
         .btn {
             background: linear-gradient(145deg, #7c4dff, #b388ff);
@@ -126,26 +148,49 @@
         .status.success {
             color: #81c784;
         }
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border: 2px solid #b388ff;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(124, 77, 255, 0.4);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(124, 77, 255, 0.7);
+        }
     </style>
 </head>
 <body>
+    <a href="index.html" class="back-btn">←</a>
     <h1>Создание ссылок</h1>
     <div class="container">
         <div class="form-section">
-            <div class="form-group">
-                <label for="sost-select">Выберите состав:</label>
-                <select id="sost-select">
-                    <option value="1">1 состав</option>
-                    <option value="2">2 состав</option>
-                </select>
+            <div class="selector-group">
+                <div class="selector-label">Выберите состав:</div>
+                <div class="selector-buttons" id="sost-buttons">
+                    <button class="selector-btn active" data-value="1">1 состав</button>
+                    <button class="selector-btn" data-value="2">2 состав</button>
+                    <div class="selector-slider" id="sost-slider" style="width: 50%;"></div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="people-select">Количество человек:</label>
-                <select id="people-select">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                </select>
+            <div class="selector-group">
+                <div class="selector-label">Количество человек:</div>
+                <div class="selector-buttons" id="people-buttons">
+                    <button class="selector-btn active" data-value="1">1</button>
+                    <button class="selector-btn" data-value="2">2</button>
+                    <button class="selector-btn" data-value="3">3</button>
+                    <div class="selector-slider" id="people-slider" style="width: 33.33%;"></div>
+                </div>
             </div>
             <button class="btn" id="create-btn">Создать</button>
             <div class="status" id="status"></div>
@@ -161,9 +206,35 @@
     </div>
 
     <script>
+        let selectedSost = 1;
+        let selectedActivateCount = 1;
+
+        function setupSelector(buttonsId, sliderId, initialValue, callback) {
+            const buttons = document.querySelectorAll(`#${buttonsId} .selector-btn`);
+            const slider = document.getElementById(sliderId);
+            const totalButtons = buttons.length;
+            const sliderWidth = 100 / totalButtons;
+
+            slider.style.width = `${sliderWidth}%`;
+
+            buttons.forEach((btn, index) => {
+                btn.addEventListener('click', () => {
+                    // Remove active from all
+                    buttons.forEach(b => b.classList.remove('active'));
+                    // Add active to clicked
+                    btn.classList.add('active');
+                    // Move slider
+                    slider.style.transform = `translateX(${index * 100}%)`;
+                    // Update selected value
+                    callback(parseInt(btn.dataset.value));
+                });
+            });
+        }
+
+        setupSelector('sost-buttons', 'sost-slider', 1, (value) => { selectedSost = value; });
+        setupSelector('people-buttons', 'people-slider', 1, (value) => { selectedActivateCount = value; });
+
         document.getElementById('create-btn').addEventListener('click', async () => {
-            const sost = parseInt(document.getElementById('sost-select').value);
-            const activateCount = parseInt(document.getElementById('people-select').value);
             const status = document.getElementById('status');
             const resultSection = document.getElementById('result-section');
             const linkInput = document.getElementById('link-input');
@@ -177,7 +248,7 @@
                 const response = await fetch('http://45.138.102.75:8000/create-link', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sost, activate_count: activateCount })
+                    body: JSON.stringify({ sost: selectedSost, activate_count: selectedActivateCount })
                 });
 
                 if (!response.ok) {

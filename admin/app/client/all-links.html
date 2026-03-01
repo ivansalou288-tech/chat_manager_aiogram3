@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Все ссылки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #b388ff;
+            text-shadow: 0 0 20px #b388ff, 0 0 40px #7c4dff;
+            margin-bottom: 50px;
+            font-size: 2.5em;
+        }
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border: 2px solid #b388ff;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(124, 77, 255, 0.4);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(124, 77, 255, 0.7);
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .links-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.3);
+        }
+        .links-table th, .links-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #7c4dff;
+        }
+        .links-table th {
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            color: #050510;
+            font-weight: bold;
+        }
+        .links-table tr:hover {
+            background: rgba(124, 77, 255, 0.1);
+        }
+        .no-links {
+            text-align: center;
+            color: #999;
+            padding: 50px;
+            font-size: 1.2em;
+        }
+        .copy-btn {
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border: 2px solid #b388ff;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        .copy-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(124, 77, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">←</a>
+    <h1>Все ссылки</h1>
+    <div class="container">
+        <table class="links-table">
+            <thead>
+                <tr>
+                    <th>Ссылка</th>
+                    <th>Кол-во активаций</th>
+                    <th>Состав</th>
+                </tr>
+            </thead>
+            <tbody id="links-tbody">
+                <!-- Links will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadLinks() {
+            try {
+                const response = await fetch('http://45.138.102.75:8000/all-links');
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки ссылок');
+                }
+                const links = await response.json();
+                const tbody = document.getElementById('links-tbody');
+                if (links.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="no-links">Ссылок нет</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = links.map(link => `
+                    <tr>
+                        <td>
+                            <code>${link.link}</code>
+                            <button class="copy-btn" onclick="copyToClipboard('${link.link}')">Копировать</button>
+                        </td>
+                        <td>${link.activate_count}</td>
+                        <td>${link.sost}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Ошибка:', error);
+                document.getElementById('links-tbody').innerHTML = '<tr><td colspan="3" class="no-links">Ошибка загрузки ссылок</td></tr>';
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Ссылка скопирована!');
+            }).catch(err => {
+                console.error('Ошибка копирования:', err);
+                alert('Не удалось скопировать');
+            });
+        }
+
+        loadLinks();
+    </script>
+</body>
+</html>
