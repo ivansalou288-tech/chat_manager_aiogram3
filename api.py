@@ -41,7 +41,9 @@ class RecomAddAction(BaseModel):
     username: str | None = None
     pubg_nik: str | None = None
 
-
+class CreateLinkAction(BaseModel):
+    sost: int
+    activate_count: int
 
 
 
@@ -382,38 +384,42 @@ async def recom_add(action: RecomAddAction):
     return {"status": "ok"}
 
 
-@app.get('/warns/{chat}/{user}')
-def get_warns(chat: str, user: int):
-    chat_id = chats_names.get(chat)
-    if chat_id is None:
-        raise HTTPException(status_code=404, detail="Chat not found")
+@app.post('/create-link')
+def create_link(action: CreateLinkAction):
+    sost = action.sost
+    activate_count = action.activate_count
+    link = f"WERTY-{password_generator.generate(length=8, chars='ASDFGHJKL12345678')}"
+    connection = sqlite3.connect(datahelp_path, check_same_thread=False)
+    cursor = connection.cursor()
+    cursor.execute('INSERT INTO links_for_sosts (link_text, activate_count, sost) VALUES (?, ?, ?)', (link, activate_count, sost))
+    connection.commit()
+    connection.close()
+    return {"link": link, "activate_count": activate_count, "sost": sost}
 
+
+@app.get('/warns/{chat}/{user}')
+async def get_warns(chat: str, user: int):
     connection = sqlite3.connect(warn_path, check_same_thread=False)
     cursor = connection.cursor()
-    cursor.execute(f"SELECT * FROM [{(chat_id)}] WHERE tg_id=?", (user,))
+    cursor.execute(f"SELECT warns_count FROM [{(chats_names[chat])}] WHERE tg_id=?", (user,))
     row = cursor.fetchone()
-
-    # Если предупреждений нет — возвращаем пустой список
-    if not row:
-        return []
-
-    # Структура строки берётся из snat_admn_warn:
-    # 0: tg_id, 1: warns_count, 2: first_warn, 3: second_warn, 4: therd_warn,
-    # 5: first_moder, 6: second_moder, 7: therd_moder
-    first_warn, second_warn, therd_warn = row[2], row[3], row[4]
-    first_moder, second_moder, therd_moder = row[5], row[6], row[7]
+    cnt = row[0] if row else 0
 
     warns = []
-    if first_warn:
-        warns.append({"num": 1, "reason": first_warn, "moder": first_moder})
-    if second_warn:
-        warns.append({"num": 2, "reason": second_warn, "moder": second_moder})
-    if therd_warn:
-        warns.append({"num": 3, "reason": therd_warn, "moder": therd_moder})
+    if cnt > 0:
+        cursor.execute(f"SELECT first_warn, second_warn, therd_warn, first_moder, second_moder, therd_moder FROM [{(chats_names[chat])}] WHERE tg_id=?", (user,))
+        row = cursor.fetchone()
+        first_warn, second_warn, therd_warn = row[0], row[1], row[2]
+        first_moder, second_moder, therd_moder = row[3], row[4], row[5]
 
-    # Вернём максимум 3 предупреждения (по факту их и так максимум 3)
+        if first_warn:
+            warns.append({"num": 1, "reason": first_warn, "moder": first_moder})
+        if second_warn:
+            warns.append({"num": 2, "reason": second_warn, "moder": second_moder})
+        if therd_warn:
+            warns.append({"num": 3, "reason": therd_warn, "moder": therd_moder})
+
     return warns[:3]
-
 
 
 @app.post("/ban")

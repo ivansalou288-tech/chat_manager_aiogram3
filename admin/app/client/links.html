@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание ссылок</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #b388ff;
+            text-shadow: 0 0 20px #b388ff, 0 0 40px #7c4dff;
+            margin-bottom: 50px;
+            font-size: 2.5em;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .form-section {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 2px solid #7c4dff;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.3);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #b388ff;
+            font-size: 1.1em;
+        }
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #7c4dff;
+            border-radius: 8px;
+            background: #0a0a0a;
+            color: #fff;
+            font-size: 1em;
+            box-shadow: 0 0 10px rgba(124, 77, 255, 0.2);
+        }
+        select:focus {
+            outline: none;
+            border-color: #b388ff;
+            box-shadow: 0 0 15px rgba(179, 136, 255, 0.5);
+        }
+        .btn {
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            border: 2px solid #b388ff;
+            color: #fff;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(124, 77, 255, 0.4);
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(124, 77, 255, 0.7);
+        }
+        .result-section {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 2px solid #7c4dff;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.3);
+            display: none;
+        }
+        .link-display {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .link-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #7c4dff;
+            border-radius: 8px;
+            background: #0a0a0a;
+            color: #fff;
+            font-size: 1em;
+            box-shadow: 0 0 10px rgba(124, 77, 255, 0.2);
+        }
+        .copy-btn {
+            padding: 12px 20px;
+            border: 2px solid #b388ff;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            color: #fff;
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 0 10px rgba(124, 77, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        .copy-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(179, 136, 255, 0.7);
+        }
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.1em;
+        }
+        .status.error {
+            color: #ff5252;
+        }
+        .status.success {
+            color: #81c784;
+        }
+    </style>
+</head>
+<body>
+    <h1>Создание ссылок</h1>
+    <div class="container">
+        <div class="form-section">
+            <div class="form-group">
+                <label for="sost-select">Выберите состав:</label>
+                <select id="sost-select">
+                    <option value="1">1 состав</option>
+                    <option value="2">2 состав</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="people-select">Количество человек:</label>
+                <select id="people-select">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+            <button class="btn" id="create-btn">Создать</button>
+            <div class="status" id="status"></div>
+        </div>
+        <div class="result-section" id="result-section">
+            <h2 style="color: #b388ff; margin-bottom: 20px;">Ссылка создана</h2>
+            <div class="link-display">
+                <input type="text" class="link-input" id="link-input" readonly>
+                <button class="copy-btn" id="copy-btn">Копировать</button>
+            </div>
+            <div id="link-info"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('create-btn').addEventListener('click', async () => {
+            const sost = parseInt(document.getElementById('sost-select').value);
+            const activateCount = parseInt(document.getElementById('people-select').value);
+            const status = document.getElementById('status');
+            const resultSection = document.getElementById('result-section');
+            const linkInput = document.getElementById('link-input');
+            const linkInfo = document.getElementById('link-info');
+
+            status.textContent = 'Создание ссылки...';
+            status.className = 'status';
+            resultSection.style.display = 'none';
+
+            try {
+                const response = await fetch('http://45.138.102.75:8000/create-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sost, activate_count: activateCount })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка при создании ссылки');
+                }
+
+                const data = await response.json();
+                linkInput.value = data.link;
+                linkInfo.textContent = `Количество активаций: ${data.activate_count}, Состав: ${data.sost}`;
+                resultSection.style.display = 'block';
+                status.textContent = 'Ссылка создана успешно!';
+                status.className = 'status success';
+            } catch (error) {
+                status.textContent = 'Ошибка: ' + error.message;
+                status.className = 'status error';
+            }
+        });
+
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            const linkInput = document.getElementById('link-input');
+            navigator.clipboard.writeText(linkInput.value).then(() => {
+                alert('Ссылка скопирована в буфер обмена!');
+            }).catch(err => {
+                console.error('Ошибка копирования: ', err);
+                alert('Не удалось скопировать ссылку');
+            });
+        });
+    </script>
+</body>
+</html>
