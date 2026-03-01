@@ -45,7 +45,8 @@ class CreateLinkAction(BaseModel):
     sost: int
     activate_count: int
 
-
+class DeleteLinkAction(BaseModel):
+    link: str
 
 chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
 
@@ -395,6 +396,19 @@ def create_link(action: CreateLinkAction):
     connection.commit()
     connection.close()
     return {"link": link, "activate_count": activate_count, "sost": sost}
+
+
+@app.post('/delete-link')
+def delete_link(action: DeleteLinkAction):
+    connection = sqlite3.connect(datahelp_path, check_same_thread=False)
+    cursor = connection.cursor()
+    cursor.execute('DELETE FROM links_for_sosts WHERE link_text = ?', (action.link,))
+    deleted = cursor.rowcount
+    connection.commit()
+    connection.close()
+    if deleted == 0:
+        raise HTTPException(status_code=404, detail="Link not found")
+    return {"status": "ok", "deleted": deleted}
 
 
 @app.get('/all-links')
