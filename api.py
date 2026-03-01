@@ -358,7 +358,7 @@ def recom_remove(action: RecomRemoveAction):
     return {"status": "ok", "deleted": deleted}
 
 @app.post('/recom-add')
-def recom_add(action: RecomAddAction):
+async def recom_add(action: RecomAddAction):
     
 
     last_recom_user_id = action.user_id
@@ -375,6 +375,10 @@ def recom_add(action: RecomAddAction):
         'INSERT INTO recommendation (user_id, pubg_id, moder, comments, rang, date, recom_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
         (last_recom_user_id, last_recom_pubg_nik, "Некий админ", last_recom_reason, last_recom_position, date, id_recom))
     connection.commit()
+    try:
+        await bot.send_message(chat_id=last_recom_user_id, text=f'{voscl} Поздравляю {voscl}\nВы получили рекомендацию от <i>Некого доброго админа</i>\n<b>Причина рекомендации:</b> {last_recom_reason}\n<b>Должность:</b> {last_recom_position}', parse_mode='html')
+    except TelegramBadRequest:
+        pass
     return {"status": "ok"}
 
 
