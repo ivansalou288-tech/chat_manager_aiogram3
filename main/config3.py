@@ -350,12 +350,17 @@ async def recom_check_sdk(tg_id, name_user):
 
     for moder in moder_gives:
         id = int(moder)
-        rang_m = cursor.execute(f"SELECT rang FROM [{-(sost_1)}] WHERE tg_id=?", (id,)).fetchall()[0][0]
-        moder_rang.append(rangs_name[rang_m])
+        try:
+            rang_m = cursor.execute(f"SELECT rang FROM [{-(sost_1)}] WHERE tg_id=?", (id,)).fetchall()[0][0]
+            moder_rang.append(rangs_name[rang_m])
+        except IndexError:
+            moder_rang.append('Неизвестная должность')
 
     for i in range(recommendation_count):
-        name_mod = cursor.execute(f"SELECT nik FROM [{-(sost_1)}] WHERE tg_id=?", (int(moder_gives[i]),)).fetchall()[0][0]
-
+        try:
+            name_mod = cursor.execute(f"SELECT nik FROM [{-(sost_1)}] WHERE tg_id=?", (int(moder_gives[i]),)).fetchall()[0][0]
+        except IndexError:
+            name_mod = moder_gives[i]
         textt = f'🟢 <b>{i+1}</b>. От <a href="tg://user?id={moder_gives[i]}">{name_mod}</a> | Должность: <b>{moder_rang[i]}</b>\n<b>&#8195Чем отличился:</b> {comments[i]}\n<b>&#8195Рекомендован на:</b> {rang[i]}\n<b>&#8195Дата рекомендации: {date[i]}</b>'
         itog.append(textt)
     text = '\n\n'.join(itog)
