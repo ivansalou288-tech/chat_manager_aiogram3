@@ -349,7 +349,10 @@ async def recom_check_sdk(tg_id, name_user):
         date.append(all[i][5])
 
     for moder in moder_gives:
-        id = int(moder)
+        try:
+            id = int(moder)
+        except ValueError:
+            id = moder
         try:
             rang_m = cursor.execute(f"SELECT rang FROM [{-(sost_1)}] WHERE tg_id=?", (id,)).fetchall()[0][0]
             moder_rang.append(rangs_name[rang_m])
