@@ -245,7 +245,7 @@
             resultSection.style.display = 'none';
 
             try {
-                const response = await fetch('http://45.138.102.75:8000/create-link', {
+                const response = await fetch('https://ezh-dev.ru:8000/create-link', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sost: selectedSost, activate_count: selectedActivateCount })
