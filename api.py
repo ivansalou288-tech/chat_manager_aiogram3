@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import ssl
 import sys
 from fastapi import FastAPI, HTTPException
 import uvicorn
@@ -49,6 +50,9 @@ class DeleteLinkAction(BaseModel):
     link: str
 
 chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
+
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+ssl_context.load_cert_chain('/etc/letsencrypt/live/ezh-dev.ru/cert.pem', keyfile='/etc/letsencrypt/live/ezh-dev.ru/privkey.pem')
 
 command_name = {
             'ban': 'Блокировка пользователей',
@@ -490,6 +494,6 @@ async def snat_warn(action: SnatWarnAction):
     return {"status": "ok"}
 
 if  __name__ == '__main__':
-    uvicorn.run('api:app', reload=True, host="0.0.0.0")
+    uvicorn.run('api:app', reload=True, host="0.0.0.0", ssl = ssl_context)
     
     
