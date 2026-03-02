@@ -260,17 +260,52 @@
                     tg.MainButton.onClick(() => {
                         if (!lastCreatedLink) return;
                         
-                        // Просто копируем ссылку в буфер обмена и показываем уведомление
-                        if (tg?.Clipboard?.writeText) {
-                            tg.Clipboard.writeText(lastCreatedLink);
-                            tg.showPopup({ message: 'Ссылка скопирована в буфер обмена!' });
-                        } else {
-                            navigator.clipboard.writeText(lastCreatedLink).then(() => {
-                                alert('Ссылка скопирована в буфер обмена!');
-                            }).catch(() => {
-                                alert('Не удалось скопировать ссылку');
-                            });
-                        }
+                        // Визуальная индикация отправки
+                        const originalText = tg.MainButton.text;
+                        tg.MainButton.setText('Отправка...');
+                        tg.MainButton.disable();
+                        
+                        // Отправляем запрос на сервер для отправки ссылки в бота
+                        fetch('https://ezh-dev.ru:8000/send-link-to-bot', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                link: lastCreatedLink,
+                                sost: selectedSost,
+                                activate_count: selectedActivateCount
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'ok') {
+                                tg.MainButton.setText('✓ Отправлено');
+                                setTimeout(() => {
+                                    tg.MainButton.setText(originalText);
+                                    tg.MainButton.enable();
+                                }, 1500);
+                            } else {
+                                throw new Error(data.error || 'Ошибка отправки');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error sending link:', error);
+                            // Fallback: копируем ссылку в буфер обмена
+                            if (tg?.Clipboard?.writeText) {
+                                tg.Clipboard.writeText(lastCreatedLink);
+                                tg.showPopup({ message: 'Ссылка скопирована в буфер обмена!' });
+                            } else {
+                                navigator.clipboard.writeText(lastCreatedLink).then(() => {
+                                    alert('Ссылка скопирована в буфер обмена!');
+                                }).catch(() => {
+                                    alert('Не удалось скопировать ссылку');
+                                });
+                            }
+                            tg.MainButton.setText('Ошибка');
+                            setTimeout(() => {
+                                tg.MainButton.setText(originalText);
+                                tg.MainButton.enable();
+                            }, 1500);
+                        });
                     });
                 }
             } catch (_) {

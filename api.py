@@ -49,6 +49,11 @@ class CreateLinkAction(BaseModel):
 class DeleteLinkAction(BaseModel):
     link: str
 
+class SendLinkToBotAction(BaseModel):
+    link: str
+    sost: int
+    activate_count: int
+
 chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -492,6 +497,21 @@ async def snat_warn(action: SnatWarnAction):
 
     await admin_warn_dell(int(userid), chats_names[chat], num, max(cnt - 1, 0))
     return {"status": "ok"}
+
+@app.post('/send-link-to-bot')
+async def send_link_to_bot(action: SendLinkToBotAction):
+    try:
+        # Отправляем ссылку в админ-бот
+        admin_chat_id = 8015726709  # ID админа (можно вынести в конфиг)
+        await bot.send_message(
+            admin_chat_id,
+            f"🔗 Новая ссылка создана:\n\n<code>{action.link}</code>\n\n📊 Параметры:\n• Состав: {action.sost}\n• Активаций: {action.activate_count}",
+            parse_mode='HTML'
+        )
+        return {"status": "ok"}
+    except Exception as e:
+        print(f'Error sending link to bot: {e}')
+        return {"status": "error", "error": str(e)}
 
 ssl_context.load_cert_chain('/etc/letsencrypt/live/ezh-dev.ru/cert.pem', keyfile='/etc/letsencrypt/live/ezh-dev.ru/privkey.pem')
 
