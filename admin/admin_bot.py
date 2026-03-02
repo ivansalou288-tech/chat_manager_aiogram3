@@ -15,46 +15,12 @@ async def start(message: types.Message):
         types.InlineKeyboardButton(text="Админ - панель", callback_data="admn_panell_check"),
         
         types.InlineKeyboardButton(text="📚 Документация", url='https://ivansalou288-tech.github.io/chat_manager_bot/html/admin_guide.html'),
-
+        
     ]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[[button] for button in buttons])
 
     await message.answer("Приветствуем в админ боте\n\nЧто хочешь сделать?", reply_markup=keyboard)
 
-@router.message(F.web_app_data)
-async def web_app_data_handler(message: types.Message):
-    print('web_app_data_handler', getattr(message, 'content_type', None), getattr(getattr(message, 'web_app_data', None), 'data', None))
-    try:
-        data = json.loads(message.web_app_data.data)
-    except Exception:
-        await message.answer("Не удалось прочитать данные из MiniApp")
-        return
-
-    if isinstance(data, dict) and data.get('type') == 'created_link':
-        link = data.get('link')
-        if link:
-            await message.answer(f"Ссылка: <code>{link}</code>", parse_mode='HTML')
-            return
-
-    await message.answer("Получены данные из MiniApp")
-
-@router.message(F.content_type == 'web_app_data')
-async def web_app_data_handler_ct(message: types.Message):
-    print('web_app_data_handler_ct', getattr(message, 'content_type', None), getattr(getattr(message, 'web_app_data', None), 'data', None))
-    try:
-        raw = message.web_app_data.data
-        data = json.loads(raw) if raw else None
-    except Exception:
-        await message.answer("Не удалось прочитать данные из MiniApp")
-        return
-
-    if isinstance(data, dict) and data.get('type') == 'created_link':
-        link = data.get('link')
-        if link:
-            await message.answer(f"Ссылка: <code>{link}</code>", parse_mode='HTML')
-            return
-
-    await message.answer("Получены данные из MiniApp")
 print('start2')
 from new_link import *
 from admin.recommend import *
