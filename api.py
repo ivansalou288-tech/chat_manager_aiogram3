@@ -490,6 +490,6 @@ async def snat_warn(action: SnatWarnAction):
     return {"status": "ok"}
 
 if  __name__ == '__main__':
-    uvicorn.run('api:app', reload=True, host="0.0.0.0", port = 80)
+    uvicorn.run('api:app', reload=True, host="0.0.0.0")
     
     
