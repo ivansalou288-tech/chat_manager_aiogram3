@@ -259,12 +259,48 @@
                     tg.MainButton.hide();
                     tg.MainButton.onClick(() => {
                         if (!lastCreatedLink) return;
-                        tg.sendData(JSON.stringify({
-                            type: 'created_link',
-                            link: lastCreatedLink,
-                            sost: selectedSost,
-                            activate_count: selectedActivateCount
-                        }));
+                        
+                        // Визуальная индикация отправки
+                        const originalText = tg.MainButton.text;
+                        tg.MainButton.setText('Отправка...');
+                        tg.MainButton.disable();
+                        
+                        // Попытка отправить через Telegram
+                        try {
+                            tg.sendData(JSON.stringify({
+                                type: 'created_link',
+                                link: lastCreatedLink,
+                                sost: selectedSost,
+                                activate_count: selectedActivateCount
+                            }));
+                            
+                            // Если sendData сработал, покажем успех через 1 сек (fallback, если бот не ответил)
+                            setTimeout(() => {
+                                tg.MainButton.setText('✓ Отправлено');
+                                setTimeout(() => {
+                                    tg.MainButton.setText(originalText);
+                                    tg.MainButton.enable();
+                                }, 1500);
+                            }, 1000);
+                        } catch (e) {
+                            console.error('tg.sendData error:', e);
+                            // Fallback: скопировать ссылку и показать alert
+                            if (tg?.Clipboard?.writeText) {
+                                tg.Clipboard.writeText(lastCreatedLink);
+                                tg.showPopup({ message: 'Ссылка скопирована в буфер обмена!' });
+                            } else {
+                                navigator.clipboard.writeText(lastCreatedLink).then(() => {
+                                    alert('Ссылка скопирована в буфер обмена!');
+                                }).catch(() => {
+                                    alert('Не удалось скопировать ссылку');
+                                });
+                            }
+                            tg.MainButton.setText('Ошибка');
+                            setTimeout(() => {
+                                tg.MainButton.setText(originalText);
+                                tg.MainButton.enable();
+                            }, 1500);
+                        }
                     });
                 }
             } catch (_) {
