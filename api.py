@@ -493,7 +493,10 @@ async def snat_warn(action: SnatWarnAction):
     await admin_warn_dell(int(userid), chats_names[chat], num, max(cnt - 1, 0))
     return {"status": "ok"}
 
+ssl_context.load_cert_chain('/etc/letsencrypt/live/ezh-dev.ru/cert.pem', keyfile='/etc/letsencrypt/live/ezh-dev.ru/privkey.pem')
+
+
 if  __name__ == '__main__':
-    uvicorn.run('api:app', reload=True, host="0.0.0.0", ssl = ssl_context)
+    uvicorn.run('api:app', reload=True, host="0.0.0.0", ssl_keyfile='/etc/letsencrypt/live/ezh-dev.ru/privkey.pem', ssl_certfile='/etc/letsencrypt/live/ezh-dev.ru/cert.pem')
     
     
