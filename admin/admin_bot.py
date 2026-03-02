@@ -12,6 +12,7 @@ async def start(message: types.Message):
         types.InlineKeyboardButton(text="Создать рекомендацию", callback_data="recommend_check"),
         types.InlineKeyboardButton(text="Снять рекомендацию", callback_data="recommend_check_snat"),
         types.InlineKeyboardButton(text="Админ - панель", callback_data="admn_panell_check"),
+        
         types.InlineKeyboardButton(text="📚 Документация", url='https://ivansalou288-tech.github.io/chat_manager_bot/html/admin_guide.html'),
 
     ]

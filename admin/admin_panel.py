@@ -3,6 +3,8 @@ from aiogram import types, Bot, F
 from admin_config import router, bot, can_admin_panel, klan, sost_1, sost_2, main_path
 import sqlite3
 
+MINIAPP_LINKS_URL = "https://ezh-dev.ru/admin/app/client/index.html"
+
 #? EN: Checks if user has admin panel access permissions and redirects to admin panel
 #* RU: Проверяет, есть ли у пользователя права доступа к админ-панели и перенаправляет к админ-панели
 @router.callback_query(F.data == "admn_panell_check")
@@ -27,6 +29,10 @@ async def admin_panel(call: types.CallbackQuery, bot: Bot):
     buttons = [
         types.InlineKeyboardButton(text="Участники", callback_data="users"),
         types.InlineKeyboardButton(text="Просмотр дк", callback_data="dk"),
+        types.InlineKeyboardButton(
+            text="MiniApp",
+            web_app=types.WebAppInfo(url=MINIAPP_LINKS_URL),
+        ),
     ]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[[btn] for btn in buttons])
     await call.message.edit_text( text="Админ панель", reply_markup=keyboard)

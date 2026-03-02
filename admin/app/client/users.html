@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пользователи</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
@@ -166,6 +167,28 @@
     <div id="users"></div>
 
     <script>
+        (function () {
+            const tg = window.Telegram?.WebApp;
+            if (!tg) return;
+
+            try {
+                tg.ready();
+                tg.expand();
+                if (tg.setHeaderColor) tg.setHeaderColor('#0a0a0a');
+                if (tg.setBackgroundColor) tg.setBackgroundColor('#0a0a0a');
+                if (tg.BackButton) {
+                    tg.BackButton.show();
+                    tg.BackButton.onClick(() => {
+                        const backBtn = document.querySelector('.back-btn');
+                        if (backBtn) backBtn.click();
+                    });
+                }
+                if (tg.MainButton) tg.MainButton.hide();
+            } catch (_) {
+                // ignore
+            }
+        })();
+
         const urlParams = new URLSearchParams(window.location.search);
         const chat = urlParams.get('chat') || 'klan';
         let currentChat = chat;

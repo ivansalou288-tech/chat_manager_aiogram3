@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Создание ссылок</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
@@ -206,8 +207,10 @@
     </div>
 
     <script>
+        const tg = window.Telegram?.WebApp;
         let selectedSost = 1;
         let selectedActivateCount = 1;
+        let lastCreatedLink = null;
 
         function setupSelector(buttonsId, sliderId, initialValue, callback) {
             const buttons = document.querySelectorAll(`#${buttonsId} .selector-btn`);
@@ -234,6 +237,43 @@
         setupSelector('sost-buttons', 'sost-slider', 1, (value) => { selectedSost = value; });
         setupSelector('people-buttons', 'people-slider', 1, (value) => { selectedActivateCount = value; });
 
+        function initTelegramMiniApp() {
+            if (!tg) return;
+
+            try {
+                tg.ready();
+                tg.expand();
+                if (tg.setHeaderColor) tg.setHeaderColor('#0a0a0a');
+                if (tg.setBackgroundColor) tg.setBackgroundColor('#0a0a0a');
+
+                if (tg.BackButton) {
+                    tg.BackButton.show();
+                    tg.BackButton.onClick(() => {
+                        const backBtn = document.querySelector('.back-btn');
+                        if (backBtn) backBtn.click();
+                    });
+                }
+
+                if (tg.MainButton) {
+                    tg.MainButton.setText('Отправить ссылку в админ-бот');
+                    tg.MainButton.hide();
+                    tg.MainButton.onClick(() => {
+                        if (!lastCreatedLink) return;
+                        tg.sendData(JSON.stringify({
+                            type: 'created_link',
+                            link: lastCreatedLink,
+                            sost: selectedSost,
+                            activate_count: selectedActivateCount
+                        }));
+                    });
+                }
+            } catch (_) {
+                // ignore
+            }
+        }
+
+        initTelegramMiniApp();
+
         document.getElementById('create-btn').addEventListener('click', async () => {
             const status = document.getElementById('status');
             const resultSection = document.getElementById('result-section');
@@ -257,19 +297,39 @@
 
                 const data = await response.json();
                 linkInput.value = data.link;
+                lastCreatedLink = data.link;
                 linkInfo.textContent = `Количество активаций: ${data.activate_count}, Состав: ${data.sost}`;
                 resultSection.style.display = 'block';
                 status.textContent = 'Ссылка создана успешно!';
                 status.className = 'status success';
+
+                if (tg?.MainButton) {
+                    tg.MainButton.show();
+                    tg.MainButton.enable();
+                }
             } catch (error) {
                 status.textContent = 'Ошибка: ' + error.message;
                 status.className = 'status error';
+
+                if (tg?.MainButton) {
+                    tg.MainButton.hide();
+                }
             }
         });
 
         document.getElementById('copy-btn').addEventListener('click', () => {
             const linkInput = document.getElementById('link-input');
-            navigator.clipboard.writeText(linkInput.value).then(() => {
+
+            const value = linkInput.value;
+            if (!value) return;
+
+            if (tg?.Clipboard?.writeText) {
+                tg.Clipboard.writeText(value);
+                tg.showPopup({ message: 'Ссылка скопирована в буфер обмена!' });
+                return;
+            }
+
+            navigator.clipboard.writeText(value).then(() => {
                 alert('Ссылка скопирована в буфер обмена!');
             }).catch(err => {
                 console.error('Ошибка копирования: ', err);

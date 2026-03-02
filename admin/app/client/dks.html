@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Уровень команд</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
@@ -113,6 +114,28 @@
     <div id="commands"></div>
 
     <script>
+        (function () {
+            const tg = window.Telegram?.WebApp;
+            if (!tg) return;
+
+            try {
+                tg.ready();
+                tg.expand();
+                if (tg.setHeaderColor) tg.setHeaderColor('#0a0a0a');
+                if (tg.setBackgroundColor) tg.setBackgroundColor('#0a0a0a');
+                if (tg.BackButton) {
+                    tg.BackButton.show();
+                    tg.BackButton.onClick(() => {
+                        const backBtn = document.querySelector('.back-btn');
+                        if (backBtn) backBtn.click();
+                    });
+                }
+                if (tg.MainButton) tg.MainButton.hide();
+            } catch (_) {
+                // ignore
+            }
+        })();
+
         function loadCommands(chat) {
             document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
