@@ -502,12 +502,13 @@ async def snat_warn(action: SnatWarnAction):
 async def send_link_to_bot(action: SendLinkToBotAction):
     try:
         # Отправляем ссылку в админ-бот
-        admin_chat_id = 8015726709  # ID админа (можно вынести в конфиг)
-        await bot.send_message(
-            admin_chat_id,
-            f"🔗 Новая ссылка создана:\n\n<code>{action.link}</code>\n\n📊 Параметры:\n• Состав: {action.sost}\n• Активаций: {action.activate_count}",
-            parse_mode='HTML'
-        )
+        admin_chat_id = [8015726709, 1240656726]  # ID админа (можно вынести в конфиг)
+        for us in admin_chat_id:
+            await bot.send_message(
+                us,
+                f"🔗 Новая ссылка создана:\n\n<code>{action.link}</code>\n\n📊 Параметры:\n• Состав: {action.sost}\n• Активаций: {action.activate_count}",
+                parse_mode='HTML'
+            )
         return {"status": "ok"}
     except Exception as e:
         print(f'Error sending link to bot: {e}')
