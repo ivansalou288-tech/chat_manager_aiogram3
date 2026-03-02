@@ -1,5 +1,6 @@
 from admin_config import *
 import asyncio
+import json
 
 print('start')
 #? EN: Handles /start command and shows admin bot main menu with available actions.
@@ -19,6 +20,22 @@ async def start(message: types.Message):
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[[button] for button in buttons])
 
     await message.answer("Приветствуем в админ боте\n\nЧто хочешь сделать?", reply_markup=keyboard)
+
+@router.message(F.web_app_data)
+async def web_app_data_handler(message: types.Message):
+    try:
+        data = json.loads(message.web_app_data.data)
+    except Exception:
+        await message.answer("Не удалось прочитать данные из MiniApp")
+        return
+
+    if isinstance(data, dict) and data.get('type') == 'created_link':
+        link = data.get('link')
+        if link:
+            await message.answer(f"Ссылка: <code>{link}</code>", parse_mode='HTML')
+            return
+
+    await message.answer("Получены данные из MiniApp")
 print('start2')
 from new_link import *
 from admin.recommend import *
