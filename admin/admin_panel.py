@@ -3,8 +3,7 @@ from aiogram import types, Bot, F
 from admin_config import router, bot, can_admin_panel, klan, sost_1, sost_2, main_path
 import sqlite3
 
-MINIAPP_LINKS_URL = "https://ezh-dev.ru/admin/app/client/index.html"
-
+MINIAPP_LINKS_URL = "https://ezh-dev.ru/chat_manager_aiogram3/admin/app/client/index.html"
 #? EN: Checks if user has admin panel access permissions and redirects to admin panel
 #* RU: Проверяет, есть ли у пользователя права доступа к админ-панели и перенаправляет к админ-панели
 @router.callback_query(F.data == "admn_panell_check")
