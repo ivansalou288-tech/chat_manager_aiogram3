@@ -60,14 +60,24 @@
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #7c4dff;
+            border-right: 1px solid #7c4dff;
+        }
+        .links-table th:last-child, .links-table td:last-child {
+            border-right: none;
         }
         .links-table th {
             background: linear-gradient(145deg, #7c4dff, #b388ff);
             color: #050510;
             font-weight: bold;
         }
+        .links-table tr:nth-child(even) {
+            background: rgba(124, 77, 255, 0.05);
+        }
         .links-table tr:hover {
             background: rgba(124, 77, 255, 0.1);
+        }
+        .links-table tr.clickable {
+            cursor: pointer;
         }
         .no-links {
             text-align: center;
@@ -79,15 +89,44 @@
             background: linear-gradient(145deg, #7c4dff, #b388ff);
             border: 2px solid #b388ff;
             color: #fff;
-            padding: 5px 10px;
+            padding: 3px 6px;
             border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px #b388ff, 0 0 10px #b388ff;
+            box-shadow: 0 0 10px rgba(179, 136, 255, 0.5), 0 0 20px rgba(179, 136, 255, 0.3);
+        }
+        .copy-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(124, 77, 255, 0.5), 0 0 25px rgba(179, 136, 255, 0.7);
+            text-shadow: 0 0 8px #b388ff, 0 0 15px #b388ff;
+        }
+        .delete-btn {
+            background: linear-gradient(145deg, #ff5252, #ff1744);
+            border: 2px solid #ff5252;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 0.9em;
             transition: all 0.3s ease;
         }
-        .copy-btn:hover {
+        .delete-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(124, 77, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 82, 82, 0.5);
+        }
+        .sub-row {
+            background: rgba(255, 82, 82, 0.1);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+            opacity: 0;
+            will-change: max-height, opacity;
+        }
+        .sub-row td {
+            padding: 10px 15px;
+            text-align: center;
         }
     </style>
 </head>
@@ -110,6 +149,8 @@
     </div>
 
     <script>
+        let currentExpanded = null;
+
         async function loadLinks() {
             try {
                 const response = await fetch('http://45.138.102.75:8000/all-links');
@@ -123,15 +164,50 @@
                     return;
                 }
                 tbody.innerHTML = links.map(link => `
-                    <tr>
+                    <tr class="clickable" data-link="${link.link}">
                         <td>
-                            <code>${link.link}</code>
-                            <button class="copy-btn" onclick="copyToClipboard('${link.link}')">Копировать</button>
+                            <code style="margin-right: 5px;">${link.link}</code><button class="copy-btn" onclick="copyToClipboard('${link.link}')">Копировать</button>
                         </td>
                         <td>${link.activate_count}</td>
                         <td>${link.sost}</td>
                     </tr>
                 `).join('');
+                
+                // Add event listeners for row clicks
+                document.querySelectorAll('.clickable').forEach(tr => {
+                    tr.addEventListener('click', (e) => {
+                        if (e.target.closest('.copy-btn')) return;
+                        const link = tr.dataset.link;
+                        
+                        // Close previously expanded row
+                        if (currentExpanded && currentExpanded !== tr) {
+                            const prevNext = currentExpanded.nextElementSibling;
+                            if (prevNext && prevNext.classList.contains('sub-row')) {
+                                prevNext.style.maxHeight = '0';
+                                prevNext.style.opacity = '0';
+                                setTimeout(() => prevNext.remove(), 700);
+                            }
+                        }
+                        
+                        const next = tr.nextElementSibling;
+                        if (next && next.classList.contains('sub-row')) {
+                            next.style.maxHeight = '0';
+                            next.style.opacity = '0';
+                            setTimeout(() => next.remove(), 700);
+                            currentExpanded = null;
+                        } else {
+                            const subRow = document.createElement('tr');
+                            subRow.className = 'sub-row';
+                            subRow.innerHTML = `<td colspan="3"><button class="delete-btn" onclick="deleteLink('${link}', this)">Удалить ссылку</button></td>`;
+                            tr.parentNode.insertBefore(subRow, tr.nextSibling);
+                            setTimeout(() => {
+                                subRow.style.maxHeight = '60px';
+                                subRow.style.opacity = '1';
+                            }, 0);
+                            currentExpanded = tr;
+                        }
+                    });
+                });
             } catch (error) {
                 console.error('Ошибка:', error);
                 document.getElementById('links-tbody').innerHTML = '<tr><td colspan="3" class="no-links">Ошибка загрузки ссылок</td></tr>';
@@ -144,6 +220,22 @@
             }).catch(err => {
                 console.error('Ошибка копирования:', err);
                 alert('Не удалось скопировать');
+            });
+        }
+
+        function deleteLink(link, btn) {
+            fetch('http://45.138.102.75:8000/delete-link', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ link })
+            }).then(() => {
+                const subRow = btn.closest('tr');
+                const mainRow = subRow.previousElementSibling;
+                subRow.remove();
+                mainRow.remove();
+            }).catch(err => {
+                console.error('Ошибка удаления:', err);
+                alert('Не удалось удалить ссылку');
             });
         }
 
