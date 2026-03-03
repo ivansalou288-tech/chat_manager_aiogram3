@@ -8,6 +8,7 @@ from pydantic import BaseModel
 import asyncio
 from datetime import datetime
 import password_generator
+from typing import Any
 # Добавляем корневую директорию проекта в путь
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, ROOT_DIR)
@@ -526,8 +527,10 @@ def dell(action: UserAction):
     chat = action.chat
     userid = action.userid
     print(f'd {chat} {userid} by admin {action.admin_id} ({action.admin_name})')
-    chat_id = chats[chat]
-    dell_sdk(chat_id, userid)
+    chat_id = chats_names.get(chat)
+    if chat_id is None:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    dell_sdk(chat_id, int(userid))
     return {"status": "ok"}
 
 @app.post("/full_dell")
@@ -567,6 +570,9 @@ async def snat_warn(action: SnatWarnAction):
 @app.post('/send-link-to-bot')
 async def send_link_to_bot(action: SendLinkToBotAction):
     try:
+        # Проверка прав доступа
+        if not check_admin_rights(action.admin_id):
+            raise HTTPException(status_code=403, detail="Access denied")
         # Отправляем ссылку в админ-бот
         admin_chat_id = [8015726709, 1240656726]  # ID админа (можно вынести в конфиг)
         for us in admin_chat_id:

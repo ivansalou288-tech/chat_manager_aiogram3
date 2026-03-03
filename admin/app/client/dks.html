@@ -101,9 +101,77 @@
             transform: scale(1.05);
             box-shadow: 0 0 25px rgba(124, 77, 255, 0.7);
         }
+
+        /* Стили профиля пользователя */
+        .user-profile {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .profile-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #b388ff;
+            box-shadow: 0 0 10px rgba(179, 136, 255, 0.3);
+        }
+
+        .profile-name {
+            color: #fff;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .user-profile {
+                top: 10px;
+                right: 10px;
+                padding: 6px 10px;
+                gap: 8px;
+            }
+
+            .profile-avatar {
+                width: 30px;
+                height: 30px;
+            }
+
+            .profile-name {
+                font-size: 0.8em;
+                max-width: 100px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Профиль пользователя -->
+    <div id="userProfile" class="user-profile">
+        <img id="profileAvatar" class="profile-avatar" src="" alt="Avatar">
+        <div id="profileName" class="profile-name"></div>
+    </div>
+
     <a href="index.html" class="back-btn">←</a>
     <h1>Уровень команд</h1>
     <div class="buttons">
@@ -136,6 +204,44 @@
             }
         })();
 
+        let currentUser = null;
+
+        function getCurrentUser() {
+            if (currentUser) return currentUser;
+            const tgLocal = window.Telegram?.WebApp;
+            if (tgLocal && tgLocal.initDataUnsafe && tgLocal.initDataUnsafe.user) {
+                currentUser = {
+                    id: tgLocal.initDataUnsafe.user.id,
+                    first_name: tgLocal.initDataUnsafe.user.first_name,
+                    last_name: tgLocal.initDataUnsafe.user.last_name || '',
+                    username: tgLocal.initDataUnsafe.user.username || '',
+                    photo_url: tgLocal.initDataUnsafe.user.photo_url || ''
+                };
+            }
+            return currentUser;
+        }
+
+        function updateUserProfile() {
+            const user = getCurrentUser();
+            if (!user) return;
+
+            const profile = document.getElementById('userProfile');
+            const avatar = document.getElementById('profileAvatar');
+            const name = document.getElementById('profileName');
+
+            const displayName = `${user.first_name} ${user.last_name}`.trim() || user.username;
+            name.textContent = displayName;
+
+            if (user.photo_url) {
+                avatar.src = user.photo_url;
+                avatar.style.display = 'block';
+            } else {
+                avatar.style.display = 'none';
+            }
+
+            profile.style.display = 'flex';
+        }
+
         function loadCommands(chat) {
             document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
@@ -155,6 +261,8 @@
         }
         
         loadCommands('klan');
+
+        updateUserProfile();
     </script>
 </body>
 </html>
