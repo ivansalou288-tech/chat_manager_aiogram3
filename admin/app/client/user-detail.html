@@ -816,7 +816,8 @@
                                         userid: userId,
                                         num: warnNum,
                                         admin_id: admin.id,
-                                        admin_name: `${admin.first_name} ${admin.last_name}`.trim() || admin.username
+                                        admin_name: `${admin.first_name} ${admin.last_name}`.trim() || admin.username,
+                                        admin_username: admin.username
                                     })
                                 }).then(() => {
                                     // Анимированная галочка и плавное удаление карточки
@@ -962,7 +963,8 @@
                                         rec_id: recId,
                                         user_id: userId,
                                         admin_id: admin.id,
-                                        admin_name: `${admin.first_name} ${admin.last_name}`.trim() || admin.username
+                                        admin_name: `${admin.first_name} ${admin.last_name}`.trim() || admin.username,
+                                        admin_username: admin.username
                                     })
                                 }).then(() => {
                                     // Animate checkmark and remove card

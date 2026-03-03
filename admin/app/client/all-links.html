@@ -415,7 +415,8 @@
                 body: JSON.stringify({ 
                     link,
                     admin_id: user.id,
-                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
+                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username,
+                    admin_username: user.username
                 })
             }).then(() => {
                 const subRow = btn.closest('tr');

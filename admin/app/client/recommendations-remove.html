@@ -725,7 +725,8 @@
                 rec_id: selectedRec.original.rec_id,
                 user_id: selectedUser.tg_ids,
                 admin_id: getCurrentUser()?.id,
-                admin_name: `${getCurrentUser()?.first_name || ''} ${getCurrentUser()?.last_name || ''}`.trim() || (getCurrentUser()?.username || '')
+                admin_name: `${getCurrentUser()?.first_name || ''} ${getCurrentUser()?.last_name || ''}`.trim() || (getCurrentUser()?.username || ''),
+                admin_username: getCurrentUser()?.username
             };
 
             console.log('Отправляю запрос на удаление:', payload);

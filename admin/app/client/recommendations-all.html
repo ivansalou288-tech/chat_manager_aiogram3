@@ -405,7 +405,8 @@
                     rec_id: recId, 
                     user_id: userId,
                     admin_id: user.id,
-                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
+                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username,
+                    admin_username: user.username
                 };
                 const r = await fetch('https://ezh-dev.ru:8000/recom-remove', {
                     method: 'POST',
