@@ -129,9 +129,85 @@
             padding: 10px 15px;
             text-align: center;
         }
+
+        /* Стили профиля пользователя */
+        .user-profile {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #b388ff;
+            box-shadow: 0 0 10px rgba(179, 136, 255, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-name {
+            color: #fff;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .user-profile {
+                top: 10px;
+                right: 10px;
+                padding: 6px 10px;
+                gap: 8px;
+            }
+
+            .user-avatar {
+                width: 30px;
+                height: 30px;
+            }
+
+            .user-name {
+                font-size: 0.8em;
+                max-width: 100px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Профиль пользователя -->
+    <div id="userProfile" class="user-profile">
+        <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+        <div class="user-info">
+            <div id="userName" class="user-name"></div>
+        </div>
+    </div>
+
     <a href="index.html" class="back-btn">←</a>
     <h1>Все ссылки</h1>
     <div class="container">
@@ -171,6 +247,80 @@
                 // ignore
             }
         })();
+
+        // Глобальная переменная для хранения данных пользователя
+        let currentUser = null;
+
+        // Функция для получения данных пользователя
+        function getCurrentUser() {
+            if (currentUser) return currentUser;
+            
+            const tg = window.Telegram?.WebApp;
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                currentUser = {
+                    id: tg.initDataUnsafe.user.id,
+                    first_name: tg.initDataUnsafe.user.first_name,
+                    last_name: tg.initDataUnsafe.user.last_name || '',
+                    username: tg.initDataUnsafe.user.username || '',
+                    language_code: tg.initDataUnsafe.user.language_code || 'ru',
+                    photo_url: tg.initDataUnsafe.user.photo_url || ''
+                };
+                console.log('User data loaded:', currentUser);
+                updateUserProfile();
+            } else {
+                console.warn('Telegram WebApp user data not available');
+            }
+            return currentUser;
+        }
+
+        // Функция для обновления профиля в интерфейсе
+        function updateUserProfile() {
+            const user = getCurrentUser();
+            if (!user) return;
+
+            const avatar = document.getElementById('userAvatar');
+            const name = document.getElementById('userName');
+            const profile = document.getElementById('userProfile');
+
+            // Устанавливаем аватар
+            if (user.photo_url) {
+                avatar.src = user.photo_url;
+            } else {
+                // Если нет аватара, используем заглушку с инициалами
+                const initials = (user.first_name[0] + (user.last_name[0] || '')).toUpperCase();
+                avatar.style.display = 'none';
+                
+                // Создаем элемент с инициалами
+                const initialsDiv = document.createElement('div');
+                initialsDiv.className = 'user-avatar-initials';
+                initialsDiv.textContent = initials;
+                initialsDiv.style.cssText = `
+                    width: 35px;
+                    height: 35px;
+                    border-radius: 50%;
+                    background: linear-gradient(145deg, #7c4dff, #b388ff);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 14px;
+                    border: 2px solid #b388ff;
+                    box-shadow: 0 0 10px rgba(179, 136, 255, 0.3);
+                `;
+                avatar.parentNode.insertBefore(initialsDiv, avatar);
+            }
+
+            // Устанавливаем имя
+            const displayName = `${user.first_name} ${user.last_name}`.trim() || user.username;
+            name.textContent = displayName;
+
+            // Показываем профиль
+            profile.style.display = 'flex';
+        }
+
+        // Инициализируем профиль пользователя
+        getCurrentUser();
 
         let currentExpanded = null;
 
@@ -253,10 +403,20 @@
         }
 
         function deleteLink(link, btn) {
+            const user = getCurrentUser();
+            if (!user) {
+                alert('Ошибка: не удалось получить данные пользователя');
+                return;
+            }
+
             fetch('https://ezh-dev.ru:8000/delete-link', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ link })
+                body: JSON.stringify({ 
+                    link,
+                    admin_id: user.id,
+                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
+                })
             }).then(() => {
                 const subRow = btn.closest('tr');
                 const mainRow = subRow.previousElementSibling;

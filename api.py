@@ -20,20 +20,28 @@ bot = Bot(token=TOKEN)
 class RecomRemoveAction(BaseModel):
     rec_id: str
     user_id: int | None = None
+    admin_id: int | None = None
+    admin_name: str | None = None
 
 class UserAction(BaseModel):
     chat: str
     userid: str
+    admin_id: int | None = None
+    admin_name: str | None = None
 
 class SnatWarnAction(BaseModel):
     chat: str
     userid: str
     num: int
+    admin_id: int | None = None
+    admin_name: str | None = None
 
 class BanAction(BaseModel):
     chat: str
     userid: str
     reason: str
+    admin_id: int | None = None
+    admin_name: str | None = None
 
 class RecomAddAction(BaseModel):
     user_id: int
@@ -41,20 +49,38 @@ class RecomAddAction(BaseModel):
     position: str
     username: str | None = None
     pubg_nik: str | None = None
+    admin_id: int | None = None
+    admin_name: str | None = None
 
 class CreateLinkAction(BaseModel):
     sost: int
     activate_count: int
+    admin_id: int | None = None
+    admin_name: str | None = None
 
 class DeleteLinkAction(BaseModel):
     link: str
+    admin_id: int | None = None
+    admin_name: str | None = None
 
 class SendLinkToBotAction(BaseModel):
     link: str
+    admin_id: int | None = None
+    admin_name: str | None = None
     sost: int
     activate_count: int
 
 chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
+
+#? EN: User IDs allowed to access admin panel
+#* RU: ID пользователей, которым разрешен доступ к админ-панели
+can_admin_panel = [8015726709, 1401086794, 1240656726]
+
+def check_admin_rights(admin_id: int | None) -> bool:
+    """Проверяет права доступа администратора"""
+    if admin_id is None:
+        return False
+    return admin_id in can_admin_panel
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 ssl_context.load_cert_chain('/etc/letsencrypt/live/ezh-dev.ru/cert.pem', keyfile='/etc/letsencrypt/live/ezh-dev.ru/privkey.pem')
@@ -245,14 +271,15 @@ async def insert_ban_user(user_id, user_men, moder_men, comments, message_id, ch
 
     connection.commit()
 
-async def admin_ban(chat: str, user_id: int, reason: str | None) -> any:
+async def admin_ban(chat: str, user_id: int, reason: str | None, admin_id: int | None = None, admin_name: str | None = None) -> any:
 
         user_men = GetUserByID(user_id).mention
+        admin_display = admin_name or "Некий админ"
         await snat_admn_warn(user_id, 3, 2, chats_names[chat])
         await snat_admn_warn(user_id, 2, 1, chats_names[chat])
         await snat_admn_warn(user_id, 1, 0, chats_names[chat])
-        message_idd = (await bot.send_message(-(chats_names[chat]), f'<b>{voscl}Внимание{voscl}</b>\n{circle_em}Злостный нарушитель {user_men} получает бан и покидает нас\n👮‍♂️Выгнал его: Некий админ\n{mes_em}Выгнали его за: {reason}', parse_mode='html')).message_id
-        await insert_ban_user(user_id, user_men, 'Admin Panel', reason, message_idd, -(chats_names[chat]))
+        message_idd = (await bot.send_message(-(chats_names[chat]), f'<b>{voscl}Внимание{voscl}</b>\n{circle_em}Злостный нарушитель {user_men} получает бан и покидает нас\n👮‍♂️Выгнал его: {admin_display}\n{mes_em}Выгнали его за: {reason}', parse_mode='html')).message_id
+        await insert_ban_user(user_id, user_men, admin_display, reason, message_idd, -(chats_names[chat]))
         await bot.ban_chat_member(-(chats_names[chat]), user_id)
 
 def dell_sdk(chat_id: int, user_id: int) -> Any:
@@ -281,10 +308,11 @@ def full_dell_sdk(user_id: int) -> Any:
     connection.commit()
 
 
-async def admin_warn_dell(user_id: int, chat_id: int, number_warn: int, new_warns_count: int): #Удаляет нужное предупреждение с сообщением в чат 
+async def admin_warn_dell(user_id: int, chat_id: int, number_warn: int, new_warns_count: int, admin_name: str | None = None): #Удаляет нужное предупреждение с сообщением в чат 
     await snat_admn_warn(user_id, number_warn, new_warns_count, chat_id)
     mention = GetUserByID(user_id).mention
-    await bot.send_message(chat_id=-(chat_id), text=f'{mention}, с тебя сняли одно предупреждение\n👮‍♂️Добрый модер: Некий админ\n{mes_em} Количество твоих предупреждений: {new_warns_count} из 3\n\n<i>Свои предупреждения ты можешь посмотреть по команде</i> «<code>преды</code>»', parse_mode='html')
+    admin_display = admin_name or "Некий админ"
+    await bot.send_message(chat_id=-(chat_id), text=f'{mention}, с тебя сняли одно предупреждение\n👮‍♂️Добрый модер: {admin_display}\n{mes_em} Количество твоих предупреждений: {new_warns_count} из 3\n\n<i>Свои предупреждения ты можешь посмотреть по команде</i> «<code>преды</code>»', parse_mode='html')
 
 @app.get("/users/{chat}")
 async def get_users(chat: str):
@@ -356,7 +384,11 @@ def get_recom_clan(chat: str):
 
 @app.post('/recom-remove')
 def recom_remove(action: RecomRemoveAction):
-    print(f"Removing recommendation: rec_id={action.rec_id}, user_id={action.user_id}")
+    # Проверка прав доступа
+    if not check_admin_rights(action.admin_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    print(f"Removing recommendation: rec_id={action.rec_id}, user_id={action.user_id} by admin {action.admin_id} ({action.admin_name})")
     connection = sqlite3.connect(main_path, check_same_thread=False)
     cursor = connection.cursor()
     if action.user_id is None:
@@ -371,24 +403,28 @@ def recom_remove(action: RecomRemoveAction):
 
 @app.post('/recom-add')
 async def recom_add(action: RecomAddAction):
+    # Проверка прав доступа
+    if not check_admin_rights(action.admin_id):
+        raise HTTPException(status_code=403, detail="Access denied")
     
-
     last_recom_user_id = action.user_id
     last_recom_reason = action.reason
     last_recom_position = action.position
     last_recom_username = action.username
     last_recom_pubg_nik = action.pubg_nik
+    admin_display = action.admin_name or "Некий админ"
     date = datetime.now().strftime('%H:%M:%S %d.%m.%Y')
     id_recom = password_generator.generate(count=1, length=8, chars='ASDFGHJKL12345678')
+    print(f'recom_add {action.user_id} by admin {action.admin_id} ({action.admin_name})')
     print(last_recom_user_id, last_recom_reason, last_recom_position, last_recom_username, last_recom_pubg_nik)
     connection = sqlite3.connect(main_path, check_same_thread=False)
     cursor = connection.cursor()
     cursor.execute(
         'INSERT INTO recommendation (user_id, pubg_id, moder, comments, rang, date, recom_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        (last_recom_user_id, last_recom_pubg_nik, "Некий админ", last_recom_reason, last_recom_position, date, id_recom))
+        (last_recom_user_id, last_recom_pubg_nik, admin_display, last_recom_reason, last_recom_position, date, id_recom))
     connection.commit()
     try:
-        await bot.send_message(chat_id=last_recom_user_id, text=f'{voscl} Поздравляю {voscl}\nВы получили рекомендацию от <i>Некого доброго админа</i>\n<b>Причина рекомендации:</b> {last_recom_reason}\n<b>Должность:</b> {last_recom_position}', parse_mode='html')
+        await bot.send_message(chat_id=last_recom_user_id, text=f'{voscl} Поздравляю {voscl}\nВы получили рекомендацию от <i>{admin_display}</i>\n<b>Причина рекомендации:</b> {last_recom_reason}\n<b>Должность:</b> {last_recom_position}', parse_mode='html')
     except TelegramBadRequest:
         pass
     return {"status": "ok"}
@@ -396,9 +432,14 @@ async def recom_add(action: RecomAddAction):
 
 @app.post('/create-link')
 def create_link(action: CreateLinkAction):
+    # Проверка прав доступа
+    if not check_admin_rights(action.admin_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     sost = action.sost
     activate_count = action.activate_count
     link = f"WERTY-{password_generator.generate(length=8, chars='ASDFGHJKL12345678')}"
+    print(f'create_link {link} sost={sost} count={activate_count} by admin {action.admin_id} ({action.admin_name})')
     connection = sqlite3.connect(datahelp_path, check_same_thread=False)
     cursor = connection.cursor()
     cursor.execute('INSERT INTO links_for_sosts (link_text, activate_count, sost) VALUES (?, ?, ?)', (link, activate_count, sost))
@@ -409,6 +450,11 @@ def create_link(action: CreateLinkAction):
 
 @app.post('/delete-link')
 def delete_link(action: DeleteLinkAction):
+    # Проверка прав доступа
+    if not check_admin_rights(action.admin_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    print(f'delete_link {action.link} by admin {action.admin_id} ({action.admin_name})')
     connection = sqlite3.connect(datahelp_path, check_same_thread=False)
     cursor = connection.cursor()
     cursor.execute('DELETE FROM links_for_sosts WHERE link_text = ?', (action.link,))
@@ -458,27 +504,41 @@ async def get_warns(chat: str, user: int):
 
 @app.post("/ban")
 async def ban(action: BanAction):
+    # Проверка прав доступа
+    if not check_admin_rights(action.admin_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     chat = action.chat
     userid = action.userid
     reason = action.reason
-    print(f'b {chat} {userid} {reason}')
-    await admin_ban(chat, int(userid), reason)
+    admin_id = action.admin_id
+    admin_name = action.admin_name
+    print(f'b {chat} {userid} {reason} by admin {admin_id} ({admin_name})')
+    await admin_ban(chat, int(userid), reason, admin_id, admin_name)
     return {"status": "ok"}
 
 @app.post("/dell")
 def dell(action: UserAction):
+    # Проверка прав доступа
+    if not check_admin_rights(action.admin_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     chat = action.chat
     userid = action.userid
-    print(f'd {chat} {userid}')
+    print(f'd {chat} {userid} by admin {action.admin_id} ({action.admin_name})')
     chat_id = chats[chat]
     dell_sdk(chat_id, userid)
     return {"status": "ok"}
 
 @app.post("/full_dell")
 def full_dell(action: UserAction):
+    # Проверка прав доступа
+    if not check_admin_rights(action.admin_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     chat = action.chat
     userid = action.userid
-    print(f'fd {chat} {userid}')
+    print(f'fd {chat} {userid} by admin {action.admin_id} ({action.admin_name})')
     full_dell_sdk(userid)
     return {"status": "ok"}
 
@@ -486,16 +546,22 @@ def full_dell(action: UserAction):
 
 @app.post("/snat_warn")
 async def snat_warn(action: SnatWarnAction):
+    # Проверка прав доступа
+    if not check_admin_rights(action.admin_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     chat = action.chat
     userid = action.userid
     num = action.num
+    admin_name = action.admin_name
     connection = sqlite3.connect(warn_path, check_same_thread=False)
     cursor = connection.cursor()
     cursor.execute(f"SELECT warns_count FROM [{(chats_names[chat])}] WHERE tg_id=?", (userid,))
     row = cursor.fetchone()
     cnt = row[0] if row else 0
 
-    await admin_warn_dell(int(userid), chats_names[chat], num, max(cnt - 1, 0))
+    await admin_warn_dell(int(userid), chats_names[chat], num, max(cnt - 1, 0), admin_name)
+    print(f'snat_warn {chat} {userid} {num} by admin {action.admin_id} ({action.admin_name})')
     return {"status": "ok"}
 
 @app.post('/send-link-to-bot')

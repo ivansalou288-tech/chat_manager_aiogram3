@@ -297,6 +297,29 @@
             }
         })();
 
+        // Глобальная переменная для хранения данных пользователя
+        let currentUser = null;
+
+        // Функция для получения данных пользователя
+        function getCurrentUser() {
+            if (currentUser) return currentUser;
+            
+            const tg = window.Telegram?.WebApp;
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                currentUser = {
+                    id: tg.initDataUnsafe.user.id,
+                    first_name: tg.initDataUnsafe.user.first_name,
+                    last_name: tg.initDataUnsafe.user.last_name || '',
+                    username: tg.initDataUnsafe.user.username || '',
+                    language_code: tg.initDataUnsafe.user.language_code || 'ru'
+                };
+                console.log('User data loaded:', currentUser);
+            } else {
+                console.warn('Telegram WebApp user data not available');
+            }
+            return currentUser;
+        }
+
         let allUsers = null;
         let selectedUser = null;
         let isLocked = false;
@@ -469,12 +492,20 @@
                 return;
             }
 
+            const user = getCurrentUser();
+            if (!user) {
+                alert('Ошибка: не удалось получить данные пользователя');
+                return;
+            }
+
             const payload = {
                 user_id: selectedUser.tg_ids,
                 username: selectedUser.username || null,
                 pubg_nik: selectedUser.nik_pubg || null,
                 reason: reason,
-                position: position
+                position: position,
+                admin_id: user.id,
+                admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
             };
 
             

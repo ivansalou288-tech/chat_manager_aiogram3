@@ -460,6 +460,14 @@
     </style>
 </head>
 <body>
+    <!-- Профиль пользователя -->
+    <div id="userProfile" class="user-profile">
+        <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+        <div class="user-info">
+            <div id="userName" class="user-name"></div>
+        </div>
+    </div>
+
     <div class="success-overlay" id="successOverlay">
         <div class="tg-logo">✓</div>
     </div>
@@ -491,6 +499,29 @@
                 // ignore
             }
         })();
+
+        // Глобальная переменная для хранения данных пользователя
+        let currentUser = null;
+
+        // Функция для получения данных пользователя
+        function getCurrentUser() {
+            if (currentUser) return currentUser;
+            
+            const tg = window.Telegram?.WebApp;
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                currentUser = {
+                    id: tg.initDataUnsafe.user.id,
+                    first_name: tg.initDataUnsafe.user.first_name,
+                    last_name: tg.initDataUnsafe.user.last_name || '',
+                    username: tg.initDataUnsafe.user.username || '',
+                    language_code: tg.initDataUnsafe.user.language_code || 'ru'
+                };
+                console.log('User data loaded:', currentUser);
+            } else {
+                console.warn('Telegram WebApp user data not available');
+            }
+            return currentUser;
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         const chat = urlParams.get('chat');
@@ -539,10 +570,21 @@
         
         function banUser() {
             const reason = document.getElementById('banReason').value;
+            const user = getCurrentUser();
+            if (!user) {
+                alert('Ошибка: не удалось получить данные пользователя');
+                return;
+            }
             fetch('https://ezh-dev.ru:8000/ban', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat: chat, userid: userId, reason: reason })
+                body: JSON.stringify({ 
+                    chat: chat, 
+                    userid: userId, 
+                    reason: reason,
+                    admin_id: user.id,
+                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
+                })
             }).then(() => {
                 document.querySelector('.container').style.display = 'none';
                 document.getElementById('successOverlay').style.display = 'flex';
@@ -553,10 +595,20 @@
         }
         
         function deleteUser() {
+            const user = getCurrentUser();
+            if (!user) {
+                alert('Ошибка: не удалось получить данные пользователя');
+                return;
+            }
             fetch('https://ezh-dev.ru:8000/dell', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat: chat, userid: userId })
+                body: JSON.stringify({ 
+                    chat: chat, 
+                    userid: userId,
+                    admin_id: user.id,
+                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
+                })
             }).then(() => {
                 document.querySelector('.container').style.display = 'none';
                 document.getElementById('successOverlay').style.display = 'flex';
@@ -567,10 +619,20 @@
         }
         
         function fullDeleteUser() {
+            const user = getCurrentUser();
+            if (!user) {
+                alert('Ошибка: не удалось получить данные пользователя');
+                return;
+            }
             fetch('https://ezh-dev.ru:8000/full_dell', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat: chat, userid: userId })
+                body: JSON.stringify({ 
+                    chat: chat, 
+                    userid: userId,
+                    admin_id: user.id,
+                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
+                })
             }).then(() => {
                 document.querySelector('.container').style.display = 'none';
                 document.getElementById('successOverlay').style.display = 'flex';
