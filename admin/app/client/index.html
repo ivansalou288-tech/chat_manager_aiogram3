@@ -143,6 +143,19 @@
             }
         }
 
+        .tg-required {
+            display: none;
+            max-width: 1000px;
+            margin: 0 auto 20px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 82, 82, 0.4);
+            background: rgba(255, 82, 82, 0.12);
+            color: #ffb3b3;
+            text-align: center;
+            box-shadow: 0 0 18px rgba(255, 82, 82, 0.12);
+        }
+
     </style>
 </head>
 <body>
@@ -150,6 +163,10 @@
     <div id="userProfile" class="user-profile">
         <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
         <div id="userName" class="user-name"></div>
+    </div>
+
+    <div id="tgRequired" class="tg-required">
+        Открой админ-панель через Telegram Mini App (иначе профиль не определяется).
     </div>
 
     <h1>Главная страница</h1>
@@ -206,7 +223,13 @@
 
         function updateUserProfile() {
             const user = getCurrentUser();
-            if (!user) return;
+            if (!user) {
+                const hasTg = !!window.Telegram?.WebApp;
+                const banner = document.getElementById('tgRequired');
+                if (banner) banner.style.display = 'block';
+                console.warn('Telegram WebApp user not available. hasTg=', hasTg, 'initDataUnsafe=', window.Telegram?.WebApp?.initDataUnsafe);
+                return;
+            }
 
             const profile = document.getElementById('userProfile');
             const avatar = document.getElementById('userAvatar');
