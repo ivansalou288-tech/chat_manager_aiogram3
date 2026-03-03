@@ -113,6 +113,22 @@
             box-shadow: 0 0 10px rgba(179, 136, 255, 0.3);
         }
 
+        .user-avatar-fallback {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #b388ff;
+            box-shadow: 0 0 10px rgba(179, 136, 255, 0.3);
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9em;
+            user-select: none;
+        }
+
         .user-name {
             color: #fff;
             font-size: 0.9em;
@@ -162,6 +178,7 @@
     <!-- Профиль пользователя -->
     <div id="userProfile" class="user-profile">
         <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+        <div id="userAvatarFallback" class="user-avatar-fallback"></div>
         <div id="userName" class="user-name"></div>
     </div>
 
@@ -233,16 +250,30 @@
 
             const profile = document.getElementById('userProfile');
             const avatar = document.getElementById('userAvatar');
+            const avatarFallback = document.getElementById('userAvatarFallback');
             const name = document.getElementById('userName');
 
             const displayName = `${user.first_name} ${user.last_name}`.trim() || user.username;
             name.textContent = displayName;
 
+            const initials = ((user.first_name || '').slice(0, 1) + (user.last_name || '').slice(0, 1)).toUpperCase() || (user.username || '').slice(0, 2).toUpperCase() || '?';
+            if (avatarFallback) avatarFallback.textContent = initials;
+
+            const showFallback = () => {
+                if (avatar) avatar.style.display = 'none';
+                if (avatarFallback) avatarFallback.style.display = 'flex';
+            };
+
+            if (avatar) {
+                avatar.onerror = showFallback;
+            }
+
             if (user.photo_url) {
+                if (avatarFallback) avatarFallback.style.display = 'none';
                 avatar.src = user.photo_url;
                 avatar.style.display = 'block';
             } else {
-                avatar.style.display = 'none';
+                showFallback();
             }
 
             profile.style.display = 'flex';
