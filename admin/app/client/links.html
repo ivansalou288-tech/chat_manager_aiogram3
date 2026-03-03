@@ -384,7 +384,14 @@
                                 admin_username: getCurrentUser()?.username
                             })
                         })
-                        .then(response => response.json())
+                        .then(async (response) => {
+                            const data = await response.json().catch(() => null);
+                            if (!response.ok) {
+                                const msg = data && (data.detail || data.error) ? (data.detail || data.error) : `Ошибка ${response.status}`;
+                                throw new Error(msg);
+                            }
+                            return data;
+                        })
                         .then(data => {
                             if (data.status === 'ok') {
                                 tg.MainButton.setText('✓ Отправлено');
@@ -409,7 +416,7 @@
                                     alert('Не удалось скопировать ссылку');
                                 });
                             }
-                            tg.MainButton.setText('Ошибка');
+                            tg.MainButton.setText(error?.message ? `Ошибка: ${error.message}` : 'Ошибка');
                             setTimeout(() => {
                                 tg.MainButton.setText(originalText);
                                 tg.MainButton.enable();
@@ -450,7 +457,9 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Ошибка при создании ссылки');
+                    const data = await response.json().catch(() => null);
+                    const msg = data && (data.detail || data.error) ? (data.detail || data.error) : `Ошибка ${response.status}`;
+                    throw new Error(msg);
                 }
 
                 const data = await response.json();

@@ -736,7 +736,14 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
-            .then(r => r.json().catch(() => null))
+            .then(async (r) => {
+                const data = await r.json().catch(() => null);
+                if (!r.ok) {
+                    const msg = data && (data.detail || data.error) ? (data.detail || data.error) : `Ошибка ${r.status}`;
+                    throw new Error(msg);
+                }
+                return data;
+            })
             .then(resp => {
                 console.log('Ответ сервера:', resp);
                 const resultBox = document.getElementById('resultBox');
@@ -781,7 +788,7 @@
             })
             .catch(err => {
                 console.error('Ошибка при удалении:', err);
-                removeStatus.textContent = 'Не удалось удалить рекомендацию.';
+                removeStatus.textContent = err?.message ? `Не удалось удалить рекомендацию. (${err.message})` : 'Не удалось удалить рекомендацию.';
                 removeStatus.classList.add('error');
             });
         });

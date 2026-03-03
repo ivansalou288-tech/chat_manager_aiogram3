@@ -415,8 +415,10 @@
                 });
 
                 if (!r.ok) {
+                    const data = await r.json().catch(() => null);
                     const text = await r.text().catch(() => '');
-                    status.textContent = 'Не удалось удалить рекомендацию.' + (text ? ` (${text})` : '');
+                    const msg = (data && (data.detail || data.error)) ? (data.detail || data.error) : text;
+                    status.textContent = 'Не удалось удалить рекомендацию.' + (msg ? ` (${msg})` : '');
                     status.classList.add('error');
                     return;
                 }

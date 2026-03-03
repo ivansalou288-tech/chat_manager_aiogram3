@@ -653,6 +653,16 @@
         function showBanForm() {
             document.getElementById('banForm').style.display = 'block';
         }
+
+        async function fetchJsonOrThrow(url, options) {
+            const r = await fetch(url, options);
+            const data = await r.json().catch(() => null);
+            if (!r.ok) {
+                const msg = data && (data.detail || data.error) ? (data.detail || data.error) : `Ошибка ${r.status}`;
+                throw new Error(msg);
+            }
+            return data;
+        }
         
         function banUser() {
             const reason = document.getElementById('banReason').value;
@@ -661,7 +671,7 @@
                 alert('Ошибка: не удалось получить данные пользователя');
                 return;
             }
-            fetch('https://ezh-dev.ru:8000/ban', {
+            fetchJsonOrThrow('https://ezh-dev.ru:8000/ban', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -669,7 +679,8 @@
                     userid: userId, 
                     reason: reason,
                     admin_id: user.id,
-                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
+                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username,
+                    admin_username: user.username
                 })
             }).then(() => {
                 document.querySelector('.container').style.display = 'none';
@@ -677,6 +688,8 @@
                 setTimeout(() => {
                     window.location.href = `users.html?chat=${chat}`;
                 }, 1500);
+            }).catch((err) => {
+                alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
             });
         }
         
@@ -686,14 +699,15 @@
                 alert('Ошибка: не удалось получить данные пользователя');
                 return;
             }
-            fetch('https://ezh-dev.ru:8000/dell', {
+            fetchJsonOrThrow('https://ezh-dev.ru:8000/dell', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     chat: chat, 
                     userid: userId,
                     admin_id: user.id,
-                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
+                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username,
+                    admin_username: user.username
                 })
             }).then(() => {
                 document.querySelector('.container').style.display = 'none';
@@ -701,6 +715,8 @@
                 setTimeout(() => {
                     window.location.href = `users.html?chat=${chat}`;
                 }, 1500);
+            }).catch((err) => {
+                alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
             });
         }
         
@@ -710,14 +726,15 @@
                 alert('Ошибка: не удалось получить данные пользователя');
                 return;
             }
-            fetch('https://ezh-dev.ru:8000/full_dell', {
+            fetchJsonOrThrow('https://ezh-dev.ru:8000/full_dell', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     chat: chat, 
                     userid: userId,
                     admin_id: user.id,
-                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username
+                    admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username,
+                    admin_username: user.username
                 })
             }).then(() => {
                 document.querySelector('.container').style.display = 'none';
@@ -725,6 +742,8 @@
                 setTimeout(() => {
                     window.location.href = `users.html?chat=${chat}`;
                 }, 1500);
+            }).catch((err) => {
+                alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
             });
         }
         
@@ -808,7 +827,7 @@
                                     alert('Ошибка: не удалось получить данные пользователя');
                                     return;
                                 }
-                                fetch('https://ezh-dev.ru:8000/snat_warn', {
+                                fetchJsonOrThrow('https://ezh-dev.ru:8000/snat_warn', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
@@ -840,6 +859,8 @@
                                             }
                                         }
                                     }, 450);
+                                }).catch((err) => {
+                                    alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
                                 });
                             });
 
@@ -956,7 +977,7 @@
                                     alert('Ошибка: не удалось получить данные пользователя');
                                     return;
                                 }
-                                fetch('https://ezh-dev.ru:8000/recom-remove', {
+                                fetchJsonOrThrow('https://ezh-dev.ru:8000/recom-remove', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
@@ -987,6 +1008,8 @@
                                             }
                                         }
                                     }, 450);
+                                }).catch((err) => {
+                                    alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
                                 });
                             });
                             

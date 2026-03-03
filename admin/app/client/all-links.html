@@ -418,14 +418,19 @@
                     admin_name: `${user.first_name} ${user.last_name}`.trim() || user.username,
                     admin_username: user.username
                 })
-            }).then(() => {
+            }).then(async (r) => {
+                if (!r.ok) {
+                    const data = await r.json().catch(() => null);
+                    const msg = data && (data.detail || data.error) ? (data.detail || data.error) : `Ошибка ${r.status}`;
+                    throw new Error(msg);
+                }
                 const subRow = btn.closest('tr');
                 const mainRow = subRow.previousElementSibling;
                 subRow.remove();
                 mainRow.remove();
             }).catch(err => {
                 console.error('Ошибка удаления:', err);
-                alert('Не удалось удалить ссылку');
+                alert(err?.message ? `Не удалось удалить ссылку. (${err.message})` : 'Не удалось удалить ссылку');
             });
         }
 
