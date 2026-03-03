@@ -23,12 +23,14 @@ class RecomRemoveAction(BaseModel):
     user_id: int | None = None
     admin_id: int | None = None
     admin_name: str | None = None
+    admin_username: str | None = None
 
 class UserAction(BaseModel):
     chat: str
     userid: str
     admin_id: int | None = None
     admin_name: str | None = None
+    admin_username: str | None = None
 
 class SnatWarnAction(BaseModel):
     chat: str
@@ -36,6 +38,7 @@ class SnatWarnAction(BaseModel):
     num: int
     admin_id: int | None = None
     admin_name: str | None = None
+    admin_username: str | None = None
 
 class BanAction(BaseModel):
     chat: str
@@ -43,6 +46,7 @@ class BanAction(BaseModel):
     reason: str
     admin_id: int | None = None
     admin_name: str | None = None
+    admin_username: str | None = None
 
 class RecomAddAction(BaseModel):
     user_id: int
@@ -52,22 +56,26 @@ class RecomAddAction(BaseModel):
     pubg_nik: str | None = None
     admin_id: int | None = None
     admin_name: str | None = None
+    admin_username: str | None = None
 
 class CreateLinkAction(BaseModel):
     sost: int
     activate_count: int
     admin_id: int | None = None
     admin_name: str | None = None
+    admin_username: str | None = None
 
 class DeleteLinkAction(BaseModel):
     link: str
     admin_id: int | None = None
     admin_name: str | None = None
+    admin_username: str | None = None
 
 class SendLinkToBotAction(BaseModel):
     link: str
     admin_id: int | None = None
     admin_name: str | None = None
+    admin_username: str | None = None
     sost: int
     activate_count: int
 
@@ -82,6 +90,23 @@ def check_admin_rights(admin_id: int | None) -> bool:
     if admin_id is None:
         return False
     return admin_id in can_admin_panel
+
+
+def build_admin_link(admin_id: int | None, admin_username: str | None = None) -> str | None:
+    if admin_username:
+        u = admin_username.lstrip('@')
+        if u:
+            return f"https://t.me/{u}"
+    if admin_id is not None:
+        return f"tg://user?id={admin_id}"
+    return None
+
+
+def ensure_not_self_action(admin_id: int | None, target_user_id: int | None, action_name: str) -> None:
+    if admin_id is None or target_user_id is None:
+        return
+    if int(admin_id) == int(target_user_id):
+        raise HTTPException(status_code=400, detail=f"Cannot {action_name} yourself")
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 ssl_context.load_cert_chain('/etc/letsencrypt/live/ezh-dev.ru/cert.pem', keyfile='/etc/letsencrypt/live/ezh-dev.ru/privkey.pem')
@@ -388,6 +413,8 @@ def recom_remove(action: RecomRemoveAction):
     # Проверка прав доступа
     if not check_admin_rights(action.admin_id):
         raise HTTPException(status_code=403, detail="Access denied")
+
+    ensure_not_self_action(action.admin_id, action.user_id, 'remove recommendation')
     
     print(f"Removing recommendation: rec_id={action.rec_id}, user_id={action.user_id} by admin {action.admin_id} ({action.admin_name})")
     connection = sqlite3.connect(main_path, check_same_thread=False)
@@ -407,6 +434,8 @@ async def recom_add(action: RecomAddAction):
     # Проверка прав доступа
     if not check_admin_rights(action.admin_id):
         raise HTTPException(status_code=403, detail="Access denied")
+
+    ensure_not_self_action(action.admin_id, action.user_id, 'recommend')
     
     last_recom_user_id = action.user_id
     last_recom_reason = action.reason
@@ -508,6 +537,8 @@ async def ban(action: BanAction):
     # Проверка прав доступа
     if not check_admin_rights(action.admin_id):
         raise HTTPException(status_code=403, detail="Access denied")
+
+    ensure_not_self_action(action.admin_id, int(action.userid), 'ban')
     
     chat = action.chat
     userid = action.userid
@@ -523,6 +554,8 @@ def dell(action: UserAction):
     # Проверка прав доступа
     if not check_admin_rights(action.admin_id):
         raise HTTPException(status_code=403, detail="Access denied")
+
+    ensure_not_self_action(action.admin_id, int(action.userid), 'delete')
     
     chat = action.chat
     userid = action.userid
@@ -538,6 +571,8 @@ def full_dell(action: UserAction):
     # Проверка прав доступа
     if not check_admin_rights(action.admin_id):
         raise HTTPException(status_code=403, detail="Access denied")
+
+    ensure_not_self_action(action.admin_id, int(action.userid), 'full delete')
     
     chat = action.chat
     userid = action.userid
@@ -552,6 +587,8 @@ async def snat_warn(action: SnatWarnAction):
     # Проверка прав доступа
     if not check_admin_rights(action.admin_id):
         raise HTTPException(status_code=403, detail="Access denied")
+
+    ensure_not_self_action(action.admin_id, int(action.userid), 'remove warn')
     
     chat = action.chat
     userid = action.userid
