@@ -213,6 +213,41 @@
                 max-width: 100px;
             }
         }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.92);
+            border: 1px solid rgba(124, 77, 255, 0.55);
+            box-shadow: 0 0 22px rgba(124, 77, 255, 0.22);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 14px;
+            z-index: 2000;
+            max-width: min(560px, calc(100vw - 24px));
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.error {
+            border-color: rgba(255, 82, 82, 0.6);
+            box-shadow: 0 0 22px rgba(255, 82, 82, 0.18);
+        }
+
+        .toast-title {
+            font-weight: 800;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+
+        .toast-text {
+            opacity: 0.95;
+            font-size: 0.9em;
+            line-height: 1.35;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
@@ -220,6 +255,11 @@
     <div id="userProfile" class="user-profile">
         <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
         <div id="userName" class="user-name-profile"></div>
+    </div>
+
+    <div id="toast" class="toast error" role="status" aria-live="polite">
+        <div class="toast-title">Ошибка</div>
+        <div id="toastText" class="toast-text"></div>
     </div>
 
     <a href="index.html" class="back-btn">←</a>
@@ -244,6 +284,30 @@
         </a>
     </div>
     <script>
+        let toastTimer = null;
+        function showError(message) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            if (!toast || !toastText) return;
+            toastText.textContent = mapErrorToRu(message);
+            toast.style.display = 'block';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
+
+        function mapErrorToRu(raw) {
+            const msg = (raw || '').toString();
+            const m = msg.toLowerCase();
+            if (!m) return 'Произошла ошибка. Попробуйте ещё раз.';
+            if (m.includes('access denied') || m.includes('403')) return 'Доступ запрещён. У вас нет прав.';
+            if (m.includes('cannot') && m.includes('yourself')) return 'Нельзя выполнять это действие над собой.';
+            if (m.includes('400')) return 'Некорректный запрос. Проверьте данные.';
+            if (m.includes('500')) return 'Ошибка сервера. Попробуйте позже.';
+            return msg;
+        }
+
         (function () {
             const tg = window.Telegram?.WebApp;
             if (!tg) return;

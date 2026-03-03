@@ -233,6 +233,10 @@
     </style>
 </head>
 <body>
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        <div id="toastTitle" class="toast-title"></div>
+        <div id="toastText" class="toast-text"></div>
+    </div>
     <!-- Профиль пользователя -->
     <div id="userProfile" class="user-profile">
         <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
@@ -396,6 +400,7 @@
             if (!user) {
                 status.textContent = 'Ошибка: не удалось получить данные пользователя';
                 status.classList.add('error');
+                showToast('Ошибка', 'Не удалось получить данные профиля Telegram. Открой страницу внутри Telegram Mini App.', 'error');
                 return;
             }
 
@@ -418,8 +423,10 @@
                     const data = await r.json().catch(() => null);
                     const text = await r.text().catch(() => '');
                     const msg = (data && (data.detail || data.error)) ? (data.detail || data.error) : text;
-                    status.textContent = 'Не удалось удалить рекомендацию.' + (msg ? ` (${msg})` : '');
+                    const ru = mapErrorToRu(msg);
+                    status.textContent = 'Не удалось удалить рекомендацию.' + (ru ? ` (${ru})` : '');
                     status.classList.add('error');
+                    showToast('Ошибка', ru || 'Не удалось удалить рекомендацию.', 'error');
                     return;
                 }
 
@@ -432,8 +439,10 @@
                     location.reload();
                 }, 350);
             } catch (err) {
-                status.textContent = 'Не удалось удалить рекомендацию.';
+                const ru = mapErrorToRu(err?.message);
+                status.textContent = ru ? `Не удалось удалить рекомендацию. (${ru})` : 'Не удалось удалить рекомендацию.';
                 status.classList.add('error');
+                showToast('Ошибка', ru || 'Не удалось удалить рекомендацию.', 'error');
             } finally {
                 isDeleting = false;
                 setTimeout(() => {
@@ -480,7 +489,40 @@
             } catch (err) {
                 console.error('Ошибка загрузки данных:', err);
                 document.getElementById('recoms').innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 50px;">Не удалось загрузить рекомендации.</div>';
+                showToast('Ошибка', 'Не удалось загрузить рекомендации. Проверьте соединение и попробуйте ещё раз.', 'error');
             }
+        }
+
+        let toastTimer = null;
+        function showToast(title, message, type) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastText = document.getElementById('toastText');
+            if (!toast || !toastTitle || !toastText) {
+                return;
+            }
+            toast.className = `toast ${type || ''}`.trim();
+            toastTitle.textContent = title || '';
+            toastText.textContent = message || '';
+            toast.style.display = 'block';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
+
+        function mapErrorToRu(raw) {
+            const msg = (raw || '').toString();
+            const m = msg.toLowerCase();
+            if (!m) return '';
+
+            if (m.includes('access denied') || m.includes('403')) return 'Доступ запрещён. У вас нет прав.';
+            if (m.includes('cannot') && m.includes('yourself')) return 'Нельзя выполнять это действие над собой.';
+            if (m.includes('recommendation not found')) return 'Рекомендация не найдена.';
+            if (m.includes('400')) return 'Некорректный запрос. Проверьте данные.';
+            if (m.includes('500')) return 'Ошибка сервера. Попробуйте позже.';
+
+            return msg;
         }
 
         loadRecommendations();

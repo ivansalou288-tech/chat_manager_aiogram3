@@ -281,6 +281,41 @@
             color: #ff6b6b;
         }
 
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.92);
+            border: 1px solid rgba(124, 77, 255, 0.55);
+            box-shadow: 0 0 22px rgba(124, 77, 255, 0.22);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 14px;
+            z-index: 2000;
+            max-width: min(560px, calc(100vw - 24px));
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.error {
+            border-color: rgba(255, 82, 82, 0.6);
+            box-shadow: 0 0 22px rgba(255, 82, 82, 0.18);
+        }
+
+        .toast-title {
+            font-weight: 800;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+
+        .toast-text {
+            opacity: 0.95;
+            font-size: 0.9em;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
         .form-status.ok {
             color: #81c784;
         }
@@ -374,6 +409,11 @@
         <div id="profileName" class="profile-name"></div>
     </div>
 
+    <div id="toast" class="toast error" role="status" aria-live="polite">
+        <div class="toast-title">Ошибка</div>
+        <div id="toastText" class="toast-text"></div>
+    </div>
+
     <a href="recommendations.html" class="back-btn">←</a>
     <h1>Снять рекомендацию</h1>
 
@@ -459,6 +499,22 @@
             }
 
             profile.style.display = 'flex';
+        }
+
+        let toastTimer = null;
+        function showError(message) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            if (!toast || !toastText) {
+                alert(message || 'Ошибка');
+                return;
+            }
+            toastText.textContent = message || 'Ошибка';
+            toast.style.display = 'block';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
         }
 
         let allUsers = null;
@@ -788,8 +844,10 @@
             })
             .catch(err => {
                 console.error('Ошибка при удалении:', err);
-                removeStatus.textContent = err?.message ? `Не удалось удалить рекомендацию. (${err.message})` : 'Не удалось удалить рекомендацию.';
+                const msg = err?.message ? `Не удалось удалить рекомендацию: ${err.message}` : 'Не удалось удалить рекомендацию.';
+                removeStatus.textContent = msg;
                 removeStatus.classList.add('error');
+                showError(msg);
             });
         });
 

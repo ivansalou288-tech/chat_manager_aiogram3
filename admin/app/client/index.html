@@ -172,6 +172,41 @@
             box-shadow: 0 0 18px rgba(255, 82, 82, 0.12);
         }
 
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.92);
+            border: 1px solid rgba(124, 77, 255, 0.55);
+            box-shadow: 0 0 22px rgba(124, 77, 255, 0.22);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 14px;
+            z-index: 2000;
+            max-width: min(560px, calc(100vw - 24px));
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.error {
+            border-color: rgba(255, 82, 82, 0.6);
+            box-shadow: 0 0 22px rgba(255, 82, 82, 0.18);
+        }
+
+        .toast-title {
+            font-weight: 800;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+
+        .toast-text {
+            opacity: 0.95;
+            font-size: 0.9em;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
     </style>
 </head>
 <body>
@@ -184,6 +219,11 @@
 
     <div id="tgRequired" class="tg-required">
         Открой админ-панель через Telegram Mini App (иначе профиль не определяется).
+    </div>
+
+    <div id="toast" class="toast error" role="status" aria-live="polite">
+        <div class="toast-title">Ошибка</div>
+        <div id="toastText" class="toast-text"></div>
     </div>
 
     <h1>Главная страница</h1>
@@ -245,6 +285,7 @@
                 const banner = document.getElementById('tgRequired');
                 if (banner) banner.style.display = 'block';
                 console.warn('Telegram WebApp user not available. hasTg=', hasTg, 'initDataUnsafe=', window.Telegram?.WebApp?.initDataUnsafe);
+                showError('Не удалось определить профиль Telegram. Открой админ-панель внутри Telegram Mini App.');
                 return;
             }
 
@@ -277,6 +318,30 @@
             }
 
             profile.style.display = 'flex';
+        }
+
+        let toastTimer = null;
+        function showError(message) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            if (!toast || !toastText) return;
+            toastText.textContent = mapErrorToRu(message);
+            toast.style.display = 'block';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
+
+        function mapErrorToRu(raw) {
+            const msg = (raw || '').toString();
+            const m = msg.toLowerCase();
+            if (!m) return 'Произошла ошибка. Попробуйте ещё раз.';
+            if (m.includes('access denied') || m.includes('403')) return 'Доступ запрещён. У вас нет прав.';
+            if (m.includes('cannot') && m.includes('yourself')) return 'Нельзя выполнять это действие над собой.';
+            if (m.includes('400')) return 'Некорректный запрос. Проверьте данные.';
+            if (m.includes('500')) return 'Ошибка сервера. Попробуйте позже.';
+            return msg;
         }
 
         updateUserProfile();

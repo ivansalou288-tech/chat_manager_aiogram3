@@ -213,6 +213,46 @@
             white-space: nowrap;
         }
 
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.92);
+            border: 1px solid rgba(124, 77, 255, 0.55);
+            box-shadow: 0 0 22px rgba(124, 77, 255, 0.22);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 14px;
+            z-index: 2000;
+            max-width: min(560px, calc(100vw - 24px));
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.error {
+            border-color: rgba(255, 82, 82, 0.6);
+            box-shadow: 0 0 22px rgba(255, 82, 82, 0.18);
+        }
+
+        .toast.success {
+            border-color: rgba(156, 204, 101, 0.55);
+            box-shadow: 0 0 22px rgba(156, 204, 101, 0.16);
+        }
+
+        .toast-title {
+            font-weight: 800;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+
+        .toast-text {
+            opacity: 0.95;
+            font-size: 0.9em;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
         @media (max-width: 768px) {
             .user-profile {
                 top: 10px;
@@ -238,6 +278,11 @@
     <div id="userProfile" class="user-profile">
         <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
         <div id="userName" class="user-name-profile"></div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        <div id="toastTitle" class="toast-title"></div>
+        <div id="toastText" class="toast-text"></div>
     </div>
 
     <a href="index.html" class="back-btn">←</a>
@@ -411,12 +456,13 @@
                                 tg.showPopup({ message: 'Ссылка скопирована в буфер обмена!' });
                             } else {
                                 navigator.clipboard.writeText(lastCreatedLink).then(() => {
-                                    alert('Ссылка скопирована в буфер обмена!');
+                                    showToast('Готово', 'Ссылка скопирована в буфер обмена.', 'success');
                                 }).catch(() => {
-                                    alert('Не удалось скопировать ссылку');
+                                    showToast('Ошибка', 'Не удалось скопировать ссылку.', 'error');
                                 });
                             }
-                            tg.MainButton.setText(error?.message ? `Ошибка: ${error.message}` : 'Ошибка');
+                            showToast('Ошибка', mapErrorToRu(error?.message || 'Ошибка'), 'error');
+                            tg.MainButton.setText('Ошибка');
                             setTimeout(() => {
                                 tg.MainButton.setText(originalText);
                                 tg.MainButton.enable();
@@ -475,8 +521,11 @@
                     tg.MainButton.enable();
                 }
             } catch (error) {
-                status.textContent = 'Ошибка: ' + error.message;
+                const msg = mapErrorToRu(error.message);
+                status.textContent = 'Ошибка: ' + msg;
                 status.className = 'status error';
+
+                showToast('Ошибка', msg, 'error');
 
                 if (tg?.MainButton) {
                     tg.MainButton.hide();
@@ -497,12 +546,46 @@
             }
 
             navigator.clipboard.writeText(value).then(() => {
-                alert('Ссылка скопирована в буфер обмена!');
+                showToast('Готово', 'Ссылка скопирована в буфер обмена.', 'success');
             }).catch(err => {
                 console.error('Ошибка копирования: ', err);
-                alert('Не удалось скопировать ссылку');
+                showToast('Ошибка', 'Не удалось скопировать ссылку.', 'error');
             });
         });
+
+        let toastTimer = null;
+        function showToast(title, message, type) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastText = document.getElementById('toastText');
+            if (!toast || !toastTitle || !toastText) {
+                alert(message || title || '');
+                return;
+            }
+            toast.className = `toast ${type || ''}`.trim();
+            toastTitle.textContent = title || '';
+            toastText.textContent = message || '';
+            toast.style.display = 'block';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
+
+        function mapErrorToRu(raw) {
+            const msg = (raw || '').toString();
+            const m = msg.toLowerCase();
+            if (!m) return 'Произошла ошибка. Попробуйте ещё раз.';
+
+            if (m.includes('access denied') || m.includes('403')) return 'Доступ запрещён. У вас нет прав.';
+            if (m.includes('cannot') && m.includes('yourself')) return 'Нельзя выполнять это действие над собой.';
+            if (m.includes('chat not found')) return 'Чат не найден.';
+            if (m.includes('recommendation not found')) return 'Рекомендация не найдена.';
+            if (m.includes('ошибка 400') || m.includes('400')) return 'Некорректный запрос. Проверьте данные.';
+            if (m.includes('500')) return 'Ошибка сервера. Попробуйте позже.';
+
+            return msg;
+        }
     </script>
 </body>
 </html>

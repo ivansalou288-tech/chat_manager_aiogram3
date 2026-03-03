@@ -94,6 +94,9 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
             z-index: 1000;
+            height: 51px;
+            max-width: calc(100vw - 40px);
+            overflow: hidden;
         }
 
         .user-profile:hover {
@@ -109,6 +112,24 @@
             object-fit: cover;
             border: 2px solid #b388ff;
             box-shadow: 0 0 10px rgba(179, 136, 255, 0.3);
+            flex: 0 0 35px;
+        }
+
+        .user-avatar-fallback {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #b388ff;
+            box-shadow: 0 0 10px rgba(179, 136, 255, 0.3);
+            background: linear-gradient(145deg, #7c4dff, #b388ff);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9em;
+            user-select: none;
+            flex: 0 0 35px;
         }
 
         .user-name-profile {
@@ -120,6 +141,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            min-width: 0;
         }
 
         @media (max-width: 768px) {
@@ -128,11 +150,21 @@
                 right: 10px;
                 padding: 6px 10px;
                 gap: 8px;
+                height: 44px;
+                max-width: calc(100vw - 20px);
             }
 
             .user-avatar {
                 width: 30px;
                 height: 30px;
+                flex: 0 0 30px;
+            }
+
+            .user-avatar-fallback {
+                width: 30px;
+                height: 30px;
+                flex: 0 0 30px;
+                font-size: 0.8em;
             }
 
             .user-name-profile {
@@ -519,19 +551,53 @@
                 opacity: 0;
             }
         }
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.92);
+            border: 1px solid rgba(124, 77, 255, 0.55);
+            box-shadow: 0 0 22px rgba(124, 77, 255, 0.22);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 14px;
+            z-index: 2000;
+            max-width: min(560px, calc(100vw - 24px));
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.error {
+            border-color: rgba(255, 82, 82, 0.6);
+            box-shadow: 0 0 22px rgba(255, 82, 82, 0.18);
+        }
+
+        .toast-title {
+            font-weight: 800;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+
+        .toast-text {
+            opacity: 0.95;
+            font-size: 0.9em;
+            line-height: 1.35;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
     <!-- Профиль пользователя -->
     <div id="userProfile" class="user-profile">
         <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
-        <div class="user-info">
-            <div id="userName" class="user-name"></div>
-        </div>
+        <div id="userAvatarFallback" class="user-avatar-fallback"></div>
+        <div id="userName" class="user-name-profile"></div>
     </div>
 
-    <div class="success-overlay" id="successOverlay">
-        <div class="tg-logo">✓</div>
+    <div id="toast" class="toast error" role="status" aria-live="polite">
+        <div class="toast-title">Ошибка</div>
+        <div id="toastText" class="toast-text"></div>
     </div>
     <a href="#" class="back-btn" id="backBtn">←</a>
     <h1>Карточка пользователя</h1>
@@ -663,12 +729,63 @@
             }
             return data;
         }
+
+        let toastTimer = null;
+        function showError(message) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            if (!toast || !toastText) {
+                alert(message || 'Ошибка');
+                return;
+            }
+            toastText.textContent = message || 'Ошибка';
+            toast.style.display = 'block';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
+
+        function updateUserProfile() {
+            const user = getCurrentUser();
+            if (!user) return;
+
+            const profile = document.getElementById('userProfile');
+            const avatar = document.getElementById('userAvatar');
+            const avatarFallback = document.getElementById('userAvatarFallback');
+            const name = document.getElementById('userName');
+
+            const displayName = `${user.first_name} ${user.last_name}`.trim() || user.username;
+            name.textContent = displayName;
+
+            const initials = ((user.first_name || '').slice(0, 1) + (user.last_name || '').slice(0, 1)).toUpperCase() || (user.username || '').slice(0, 2).toUpperCase() || '?';
+            if (avatarFallback) avatarFallback.textContent = initials;
+
+            const showFallback = () => {
+                if (avatar) avatar.style.display = 'none';
+                if (avatarFallback) avatarFallback.style.display = 'flex';
+            };
+
+            if (avatar) {
+                avatar.onerror = showFallback;
+            }
+
+            if (user.photo_url) {
+                if (avatarFallback) avatarFallback.style.display = 'none';
+                avatar.src = user.photo_url;
+                avatar.style.display = 'block';
+            } else {
+                showFallback();
+            }
+
+            profile.style.display = 'flex';
+        }
         
         function banUser() {
             const reason = document.getElementById('banReason').value;
             const user = getCurrentUser();
             if (!user) {
-                alert('Ошибка: не удалось получить данные пользователя');
+                showError('Не удалось получить данные профиля Telegram. Открой страницу внутри Telegram Mini App.');
                 return;
             }
             fetchJsonOrThrow('https://ezh-dev.ru:8000/ban', {
@@ -689,14 +806,14 @@
                     window.location.href = `users.html?chat=${chat}`;
                 }, 1500);
             }).catch((err) => {
-                alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
+                showError(err?.message || 'Ошибка');
             });
         }
         
         function deleteUser() {
             const user = getCurrentUser();
             if (!user) {
-                alert('Ошибка: не удалось получить данные пользователя');
+                showError('Ошибка: не удалось получить данные пользователя');
                 return;
             }
             fetchJsonOrThrow('https://ezh-dev.ru:8000/dell', {
@@ -716,14 +833,14 @@
                     window.location.href = `users.html?chat=${chat}`;
                 }, 1500);
             }).catch((err) => {
-                alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
+                showError(err?.message || 'Ошибка');
             });
         }
         
         function fullDeleteUser() {
             const user = getCurrentUser();
             if (!user) {
-                alert('Ошибка: не удалось получить данные пользователя');
+                showError('Ошибка: не удалось получить данные пользователя');
                 return;
             }
             fetchJsonOrThrow('https://ezh-dev.ru:8000/full_dell', {
@@ -743,7 +860,7 @@
                     window.location.href = `users.html?chat=${chat}`;
                 }, 1500);
             }).catch((err) => {
-                alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
+                showError(err?.message || 'Ошибка');
             });
         }
         
@@ -824,7 +941,7 @@
                                 const warnNum = parseInt(btn.getAttribute('data-warn-num')) || num;
                                 const admin = getCurrentUser();
                                 if (!admin) {
-                                    alert('Ошибка: не удалось получить данные пользователя');
+                                    showError('Не удалось получить данные профиля Telegram. Открой страницу внутри Telegram Mini App.');
                                     return;
                                 }
                                 fetchJsonOrThrow('https://ezh-dev.ru:8000/snat_warn', {
@@ -860,7 +977,7 @@
                                         }
                                     }, 450);
                                 }).catch((err) => {
-                                    alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
+                                    showError(err?.message || 'Ошибка');
                                 });
                             });
 
@@ -974,7 +1091,7 @@
                                 const recId = btn.getAttribute('data-rec-id');
                                 const admin = getCurrentUser();
                                 if (!admin) {
-                                    alert('Ошибка: не удалось получить данные пользователя');
+                                    showError('Не удалось получить данные профиля Telegram. Открой страницу внутри Telegram Mini App.');
                                     return;
                                 }
                                 fetchJsonOrThrow('https://ezh-dev.ru:8000/recom-remove', {
@@ -1009,7 +1126,7 @@
                                         }
                                     }, 450);
                                 }).catch((err) => {
-                                    alert(err?.message ? `Ошибка: ${err.message}` : 'Ошибка');
+                                    showError(err?.message || 'Ошибка');
                                 });
                             });
                             

@@ -168,6 +168,46 @@
             align-items: flex-start;
         }
 
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.92);
+            border: 1px solid rgba(124, 77, 255, 0.55);
+            box-shadow: 0 0 22px rgba(124, 77, 255, 0.22);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 14px;
+            z-index: 2000;
+            max-width: min(560px, calc(100vw - 24px));
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.error {
+            border-color: rgba(255, 82, 82, 0.6);
+            box-shadow: 0 0 22px rgba(255, 82, 82, 0.18);
+        }
+
+        .toast.success {
+            border-color: rgba(156, 204, 101, 0.55);
+            box-shadow: 0 0 22px rgba(156, 204, 101, 0.16);
+        }
+
+        .toast-title {
+            font-weight: 800;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+
+        .toast-text {
+            opacity: 0.95;
+            font-size: 0.9em;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
         .user-name {
             color: #fff;
             font-size: 0.9em;
@@ -206,6 +246,11 @@
         <div class="user-info">
             <div id="userName" class="user-name"></div>
         </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        <div id="toastTitle" class="toast-title"></div>
+        <div id="toastText" class="toast-text"></div>
     </div>
 
     <a href="index.html" class="back-btn">←</a>
@@ -395,17 +440,17 @@
             }
 
             navigator.clipboard.writeText(text).then(() => {
-                alert('Ссылка скопирована!');
+                showToast('Готово', 'Ссылка скопирована в буфер обмена.', 'success');
             }).catch(err => {
                 console.error('Ошибка копирования:', err);
-                alert('Не удалось скопировать');
+                showToast('Ошибка', 'Не удалось скопировать ссылку.', 'error');
             });
         }
 
         function deleteLink(link, btn) {
             const user = getCurrentUser();
             if (!user) {
-                alert('Ошибка: не удалось получить данные пользователя');
+                showToast('Ошибка', 'Не удалось получить данные профиля Telegram.', 'error');
                 return;
             }
 
@@ -430,8 +475,27 @@
                 mainRow.remove();
             }).catch(err => {
                 console.error('Ошибка удаления:', err);
-                alert(err?.message ? `Не удалось удалить ссылку. (${err.message})` : 'Не удалось удалить ссылку');
+                showToast('Ошибка', err?.message ? `Не удалось удалить ссылку: ${err.message}` : 'Не удалось удалить ссылку.', 'error');
             });
+        }
+
+        let toastTimer = null;
+        function showToast(title, message, type) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastText = document.getElementById('toastText');
+            if (!toast || !toastTitle || !toastText) {
+                alert(message || title || '');
+                return;
+            }
+            toast.className = `toast ${type || ''}`.trim();
+            toastTitle.textContent = title || '';
+            toastText.textContent = message || '';
+            toast.style.display = 'block';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
         }
 
         loadLinks();
