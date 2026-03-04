@@ -341,7 +341,7 @@ async def submit_form(request: Request):
             if form_data.telegram_id:
                 # Добавляем в основной клан
                 cursor.execute(
-                    f'INSERT INTO [{klan}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    f'INSERT INTO [{-klan}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     (form_data.telegram_id, form_data.user, form_data.name, form_data.age, form_data.nick, form_data.gameId, form_data.nick, 0, '', datetime.now().strftime('%H:%M:%S %d.%m.%Y'))
                 )
                 connection.commit()
@@ -359,7 +359,7 @@ async def submit_form(request: Request):
                 if form_data.sost == 1:
                     try:
                         cursor.execute(
-                            f'INSERT INTO [{sost_1}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                            f'INSERT INTO [{-sost_1}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                             (form_data.telegram_id, form_data.user, form_data.name, form_data.age, form_data.nick, form_data.gameId, form_data.nick, 0, '', datetime.now().strftime('%H:%M:%S %d.%m.%Y'))
                         )
                     except Exception:
@@ -369,7 +369,7 @@ async def submit_form(request: Request):
                 elif form_data.sost == 2:
                     try:
                         cursor.execute(
-                            f'INSERT INTO [{sost_2}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                            f'INSERT INTO [{-sost_2}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                             (form_data.telegram_id, form_data.user, form_data.name, form_data.age, form_data.nick, form_data.gameId, form_data.nick, 0, '', datetime.now().strftime('%H:%M:%S %d.%m.%Y'))
                         )
                     except Exception:
