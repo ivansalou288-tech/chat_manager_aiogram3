@@ -204,6 +204,47 @@
             display: block;
         }
 
+/* Стили для правил и гайда */
+.rules-content, .guide-content {
+    background: rgba(26, 0, 51, 0.7);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+.rules-content h3, .guide-content h3 {
+    color: #8a2be2;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.rules-content p, .guide-content p {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.rules-content ul, .guide-content ul {
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+.rules-content li, .guide-content li {
+    margin-bottom: 8px;
+    color: #ffffff;
+}
+
+.guide-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: center;
+}
+
+.guide-buttons button {
+    flex: 1;
+}
+
         .neon-button {
             background: linear-gradient(45deg, #8a2be2, #9333ea);
             border: none;
@@ -555,6 +596,75 @@
             }
         }
 
+        // Функция показа правил и гайда
+        function showRulesAndGuide() {
+            // Скрываем все контейнеры
+            document.getElementById('codeContainer').style.display = 'none';
+            document.getElementById('formContainer').style.display = 'none';
+            
+            // Показываем правила
+            const rulesContainer = document.createElement('div');
+            rulesContainer.className = 'form-container';
+            rulesContainer.innerHTML = `
+                <h2 class="neon-title">Правила клана</h2>
+                <div class="rules-content">
+                    <p>📋 <b>Основные правила:</b></p>
+                    <ul>
+                        <li>• Уважай других игроков</li>
+                        <li>• Не используй читеры</li>
+                        <li>• Участвуй в войнах клана</li>
+                        <li>• Соблюдай дисциплину</li>
+                    </ul>
+                    <p>🎮 <b>Игровые требования:</b></p>
+                    <ul>
+                        <li>• Активность 3+ раза в неделю</li>
+                        <li>• Уровень 50+</li>
+                        <li>• Наличие микрофона</li>
+                    </ul>
+                </div>
+                <button class="neon-button" onclick="showGuide()">
+                    Как вступить в клан
+                </button>
+            `;
+            
+            // Заменяем основной контент
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = '';
+            mainContent.appendChild(rulesContainer);
+        }
+
+        // Функция показа гайда
+        function showGuide() {
+            const guideContainer = document.createElement('div');
+            guideContainer.className = 'form-container';
+            guideContainer.innerHTML = `
+                <h2 class="neon-title">Как вступить в клан</h2>
+                <div class="guide-content">
+                    <p>🔗 <b>Шаг 1:</b></p>
+                    <p>Найди игрока <code>wePiKAcHy</code> по ID <code>51445023900</code> и нажми на его аватар</p>
+                    
+                    <p>🔗 <b>Шаг 2:</b></p>
+                    <p>В профиле игрока нажми на аватар клана «Werty» и отправь запрос</p>
+                    
+                    <p>📸 <b>Шаг 3:</b></p>
+                    <p>После одобрения заявки следуй инструкциям бота</p>
+                    
+                    <div class="guide-buttons">
+                        <button class="neon-button" onclick="location.reload()">
+                            Вернуться к началу
+                        </button>
+                        <button class="neon-button" onclick="tg.close()">
+                            Закрыть MiniApp
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = '';
+            mainContent.appendChild(guideContainer);
+        }
+
         // Обработчик нажатия на кнопку "Подать заявку"
         function handleFillButton() {
             // Вибрация для обратной связи
@@ -642,9 +752,8 @@
                     type: 'default'
                 }]
             }).then(() => {
-                // Обновляем страницу и закрываем приложение
-                window.location.reload();
-                tg.close();
+                // Показываем правила и гайд
+                showRulesAndGuide();
             });
             window.location.reload();
             tg.close();
