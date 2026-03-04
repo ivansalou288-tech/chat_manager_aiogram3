@@ -629,7 +629,7 @@
                 body: JSON.stringify(formData)
             });
             
-            // Сразу показываем уведомление и возвращаем на страницу кода
+            // Сразу показываем уведомление
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.notificationOccurred('success');
             }
@@ -642,18 +642,24 @@
                     type: 'default'
                 }]
             }).then(() => {
-                // Возвращаем на страницу ввода кода
-                document.getElementById('formContainer').style.display = 'none';
-                document.getElementById('codeContainer').style.display = 'block';
-                
-                // Очищаем поля формы
-                document.getElementById('inputName').value = '';
-                document.getElementById('inputAge').value = '';
-                document.getElementById('inputNick').value = '';
-                document.getElementById('inputGameId').value = '';
-                
-                // Сбрасываем данные кода
-                currentCodeData = null;
+                // Пытаемся закрыть мини-приложение
+                try {
+                    tg.close();
+                } catch (e) {
+                    console.log('Не удалось закрыть приложение:', e);
+                    // Если не удалось закрыть, возвращаем на страницу кода
+                    document.getElementById('formContainer').style.display = 'none';
+                    document.getElementById('codeContainer').style.display = 'block';
+                    
+                    // Очищаем поля формы
+                    document.getElementById('inputName').value = '';
+                    document.getElementById('inputAge').value = '';
+                    document.getElementById('inputNick').value = '';
+                    document.getElementById('inputGameId').value = '';
+                    
+                    // Сбрасываем данные кода
+                    currentCodeData = null;
+                }
             });
         }
 
