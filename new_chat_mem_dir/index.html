@@ -604,7 +604,7 @@
             
             try {
                 // Получаем правила с сервера
-                const response = await fetch('/get_rules');
+                const response = await fetch('https://ezh-dev.ru:8000/get_rules');
                 const data = await response.json();
                 
                 let rulesContent = '';
