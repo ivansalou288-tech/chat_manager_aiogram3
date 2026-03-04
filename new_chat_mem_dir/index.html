@@ -627,62 +627,23 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Ответ сервера:', data);
-                
-                if (data.status === 'success') {
-                    // Вибрация успеха
-                    if (tg.HapticFeedback) {
-                        tg.HapticFeedback.notificationOccurred('success');
-                    }
+            });
+            
+            // Сразу показываем уведомление и закрываем приложение
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
 
-                    // Показываем уведомление
-                    tg.showPopup({
-                        title: 'Заявка отправлена!',
-                        message: 'Ваша заявка в клан успешно отправлена. Ожидайте рассмотрения.',
-                        buttons: [{
-                            text: 'Отлично!',
-                            type: 'default'
-                        }]
-                    }).then(() => {
-                        // Закрываем мини-приложение после закрытия popup
-                        tg.close();
-                    });
-                } else {
-                    // Вибрация ошибки
-                    if (tg.HapticFeedback) {
-                        tg.HapticFeedback.notificationOccurred('error');
-                    }
-
-                    tg.showPopup({
-                        title: 'Ошибка!',
-                        message: data.message || 'Произошла ошибка при отправке заявки.',
-                        buttons: [{
-                            text: 'Понятно',
-                            type: 'default'
-                        }]
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка при отправке:', error);
-                
-                // Вибрация ошибки
-                if (tg.HapticFeedback) {
-                    tg.HapticFeedback.notificationOccurred('error');
-                }
-
-                // Показываем уведомление об ошибке
-                tg.showPopup({
-                    title: 'Ошибка!',
-                    message: error,
-                    buttons: [{
-                        text: 'Понятно',
-                        type: 'default'
-                    }]
-                });
+            tg.showPopup({
+                title: 'Заявка отправлена!',
+                message: 'Ваша заявка в клан успешно отправлена. Ожидайте рассмотрения.',
+                buttons: [{
+                    text: 'Отлично!',
+                    type: 'default'
+                }]
+            }).then(() => {
+                // Закрываем мини-приложение после закрытия popup
+                tg.close();
             });
         }
 
