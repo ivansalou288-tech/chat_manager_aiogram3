@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Mini App</title>
+    <title>Заявка в клан</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -331,34 +331,35 @@
 
     <!-- Основной контент -->
     <div class="main-content">
-        <h1 class="neon-title">Заполнение описания</h1>
+        <h1 class="neon-title">Заявка в клан</h1>
         
         <div class="form-container">
             <div class="input-group">
-                <label class="neon-label" for="inputName">Имя:</label>
-                <input type="text" id="inputName" class="neon-input" placeholder="Введите ваше имя">
+                <label class="neon-label" for="inputName">Ваше имя:</label>
+                <input type="text" id="inputName" class="neon-input" placeholder="Введите ваше реальное имя">
+                <span class="error-message" id="nameError">Имя не может быть пустым</span>
             </div>
             
             <div class="input-group">
                 <label class="neon-label" for="inputAge">Возраст:</label>
-                <input type="tel" id="inputAge" class="neon-input" placeholder="от 7 до 50" pattern="[0-9]*" inputmode="numeric">
-                <span class="error-message" id="ageError">Возраст должен быть от 7 до 50</span>
+                <input type="tel" id="inputAge" class="neon-input" placeholder="от 14 до 50 лет" pattern="[0-9]*" inputmode="numeric">
+                <span class="error-message" id="ageError">Возраст должен быть от 14 до 50</span>
             </div>
             
             <div class="input-group">
                 <label class="neon-label" for="inputNick">Игровой ник:</label>
-                <input type="text" id="inputNick" class="neon-input" placeholder="до 14 символов" maxlength="14">
+                <input type="text" id="inputNick" class="neon-input" placeholder="Ваш ник в игре" maxlength="14">
                 <span class="error-message" id="nickError">Ник не должен превышать 14 символов</span>
             </div>
             
             <div class="input-group">
-                <label class="neon-label" for="inputGameId">Игровой айди:</label>
-                <input type="tel" id="inputGameId" class="neon-input" placeholder="начинается с 5, 9-12 цифр" pattern="[0-9]*" inputmode="numeric">
+                <label class="neon-label" for="inputGameId">Игровой ID:</label>
+                <input type="tel" id="inputGameId" class="neon-input" placeholder="ID начинается с 5, 9-12 цифр" pattern="[0-9]*" inputmode="numeric">
                 <span class="error-message" id="idError">ID должен начинаться с 5 и содержать 9-12 цифр</span>
             </div>
             
             <button class="neon-button" onclick="handleFillButton()">
-                Заполнить
+                Подать заявку
             </button>
         </div>
     </div>
@@ -417,6 +418,11 @@
             }
         }
 
+        // Валидация имени
+        function validateName(name) {
+            return name.trim().length > 0;
+        }
+
         // Валидация возраста
         function validateAge(age) {
             const ageNum = parseInt(age);
@@ -448,7 +454,7 @@
             }
         }
 
-        // Обработчик нажатия на кнопку "Заполнить"
+        // Обработчик нажатия на кнопку "Подать заявку"
         function handleFillButton() {
             // Вибрация для обратной связи
             if (tg.HapticFeedback) {
@@ -462,6 +468,7 @@
             const gameId = document.getElementById('inputGameId').value.trim();
 
             // Сбрасываем предыдущие ошибки
+            toggleError('inputName', 'nameError', false);
             toggleError('inputAge', 'ageError', false);
             toggleError('inputNick', 'nickError', false);
             toggleError('inputGameId', 'idError', false);
@@ -469,6 +476,11 @@
             let hasErrors = false;
 
             // Валидация полей
+            if (!validateName(name)) {
+                toggleError('inputName', 'nameError', true);
+                hasErrors = true;
+            }
+
             if (!validateAge(age)) {
                 toggleError('inputAge', 'ageError', true);
                 hasErrors = true;
@@ -492,35 +504,74 @@
                 return;
             }
 
-            // Если все поля валидны
+            // Если все поля валидны, отправляем на сервер
+            const userData = tg.initDataUnsafe?.user;
             const formData = {
+                telegram_id: userData?.id || null,
+                user: userData?.username || null,
                 name: name,
                 age: parseInt(age),
                 nick: nick,
                 gameId: gameId
             };
 
-            console.log('Данные формы:', formData);
+            console.log('Отправка заявки в клан:', formData);
 
-            // Вибрация успеха
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
-            }
+            // Отправка данных на сервер
+            fetch('/submit_form', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Ответ сервера:', data);
+                
+                // Вибрация успеха
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
 
-            // Показываем уведомление
-            tg.showPopup({
-                title: 'Успешно!',
-                message: `Данные сохранены:\nИмя: ${name}\nВозраст: ${age}\nНик: ${nick}\nID: ${gameId}`,
-                buttons: [{
-                    text: 'Отлично!',
-                    type: 'default'
-                }]
+                // Показываем уведомление
+                tg.showPopup({
+                    title: 'Заявка отправлена!',
+                    message: 'Ваша заявка в клан успешно отправлена. Ожидайте рассмотрения.',
+                    buttons: [{
+                        text: 'Отлично!',
+                        type: 'default'
+                    }]
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка при отправке:', error);
+                
+                // Вибрация ошибки
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+
+                // Показываем уведомление об ошибке
+                tg.showPopup({
+                    title: 'Ошибка!',
+                    message: 'Не удалось отправить заявку. Попробуйте еще раз.',
+                    buttons: [{
+                        text: 'Понятно',
+                        type: 'default'
+                    }]
+                });
             });
         }
 
         // Добавляем обработчики для real-time валидации
         document.addEventListener('DOMContentLoaded', function() {
             initUserData();
+            
+            // Валидация имени при вводе
+            document.getElementById('inputName').addEventListener('input', function() {
+                toggleError('inputName', 'nameError', !validateName(this.value));
+            });
             
             // Валидация возраста при вводе
             document.getElementById('inputAge').addEventListener('input', function() {

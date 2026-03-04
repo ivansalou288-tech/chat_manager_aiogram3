@@ -2,7 +2,9 @@ import sqlite3
 import os
 import ssl
 import sys
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 from pydantic import BaseModel
 import asyncio
@@ -79,6 +81,14 @@ class SendLinkToBotAction(BaseModel):
     sost: int
     activate_count: int
 
+class FormData(BaseModel):
+    telegram_id: int = None
+    user: str = None
+    name: str
+    age: int
+    nick: str
+    gameId: str
+
 chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
 
 #? EN: User IDs allowed to access admin panel
@@ -137,6 +147,53 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Обслуживание статических файлов
+app.mount("/static", StaticFiles(directory="new_chat_mem_dir"), name="static")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    # Отдаем HTML файл
+    try:
+        with open("new_chat_mem_dir/index.html", "r", encoding="utf-8") as f:
+            content = f.read()
+        return HTMLResponse(content=content)
+    except FileNotFoundError:
+        return HTMLResponse("<h1>Файл не найден</h1>", status_code=404)
+
+@app.post("/submit_form")
+async def submit_form(form_data: FormData):
+    """
+    Принимает заявку в клан и выводит её в консоль
+    """
+    print("=" * 50)
+    print("НОВАЯ ЗАЯВКА В КЛАН:")
+    print(f"Telegram ID: {form_data.telegram_id}")
+    print(f"Username: @{form_data.user}" if form_data.user else "Username: отсутствует")
+    print(f"Имя: {form_data.name}")
+    print(f"Возраст: {form_data.age}")
+    print(f"Игровой ник: {form_data.nick}")
+    print(f"Игровой ID: {form_data.gameId}")
+    print(f"Время подачи: {datetime.now().strftime('%H:%M:%S %d.%m.%Y')}")
+    print("=" * 50)
+    
+    # Здесь можно добавить логику сохранения в базу данных
+    # Например: connection.execute("INSERT INTO clan_applications (...) VALUES (...)")
+    
+    # Возвращаем успешный ответ
+    return {
+        "status": "success",
+        "message": "Заявка в клан успешно принята",
+        "data": {
+            "telegram_id": form_data.telegram_id,
+            "user": form_data.user,
+            "name": form_data.name,
+            "age": form_data.age,
+            "nick": form_data.nick,
+            "gameId": form_data.gameId,
+            "submitted_at": datetime.now().isoformat()
+        }
+    }
 
 
 async def get_users_sdk(chat: str):
@@ -628,5 +685,3 @@ ssl_context.load_cert_chain('/etc/letsencrypt/live/ezh-dev.ru/cert.pem', keyfile
 
 if  __name__ == '__main__':
     uvicorn.run('api:app', reload=True, host="0.0.0.0", ssl_keyfile='/etc/letsencrypt/live/ezh-dev.ru/privkey.pem', ssl_certfile='/etc/letsencrypt/live/ezh-dev.ru/cert.pem')
-    
-    
