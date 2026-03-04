@@ -421,8 +421,12 @@ async def submit_form(request: Request):
                 # Основное уведомление
                 await prinatie_bot.send_message(
                     form_data.telegram_id,
-                    f"✅ Ваша заявка в клан принята!\n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n⏳ Ожидайте рассмотрения."
+                    f"✅ Твое описание! \n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n Для получения ссылок на группы в телеграме пришли скриншот что ты кинул запрос в клан"
                 )
+                connection = sqlite3.connect(dinamik_path, check_same_thread=False)
+                cursor = connection.cursor()
+                cursor.execute('INSERT INTO is_to_klan (user_id, sostav) VALUES (?, ?)', (form_data.telegram_id, form_data.sost))
+                connection.commit()
         except Exception as e:
             print(f"Ошибка отправки уведомления: {e}")
         
