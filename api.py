@@ -177,6 +177,16 @@ async def submit_form(form_data: FormData):
     print(f"Время подачи: {datetime.now().strftime('%H:%M:%S %d.%m.%Y')}")
     print("=" * 50)
     
+    # Отправка уведомления в Telegram (если нужно)
+    try:
+        if form_data.telegram_id:
+            await bot.send_message(
+                form_data.telegram_id,
+                f"✅ Ваша заявка в клан принята!\n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n⏳ Ожидайте рассмотрения."
+            )
+    except Exception as e:
+        print(f"Ошибка отправки уведомления: {e}")
+    
     # Здесь можно добавить логику сохранения в базу данных
     # Например: connection.execute("INSERT INTO clan_applications (...) VALUES (...)")
     
