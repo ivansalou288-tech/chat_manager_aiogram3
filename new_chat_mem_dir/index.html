@@ -133,6 +133,77 @@
             50% { background-position: 100% 50%; }
         }
 
+        /* Форма и поля ввода */
+        .form-container {
+            background: rgba(30, 10, 60, 0.8);
+            border: 2px solid #8a2be2;
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 0 30px rgba(138, 43, 226, 0.3),
+                inset 0 0 20px rgba(138, 43, 226, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .neon-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e9d5ff;
+            font-size: 14px;
+            font-weight: 500;
+            text-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+        }
+
+        .neon-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(20, 5, 40, 0.8);
+            border: 2px solid #6b21a8;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 10px rgba(138, 43, 226, 0.1);
+        }
+
+        .neon-input:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 
+                0 0 20px rgba(168, 85, 247, 0.4),
+                inset 0 0 10px rgba(138, 43, 226, 0.2);
+        }
+
+        .neon-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .neon-input.error {
+            border-color: #ef4444;
+            box-shadow: 
+                0 0 20px rgba(239, 68, 68, 0.4),
+                inset 0 0 10px rgba(239, 68, 68, 0.2);
+        }
+
+        .error-message {
+            display: none;
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 5px;
+            text-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
         .neon-button {
             background: linear-gradient(45deg, #8a2be2, #9333ea);
             border: none;
@@ -147,6 +218,8 @@
                 inset 0 0 20px rgba(138, 43, 226, 0.2);
             position: relative;
             overflow: hidden;
+            width: 100%;
+            margin-top: 10px;
         }
 
         .neon-button::before {
@@ -233,6 +306,11 @@
             .profile-name {
                 font-size: 14px;
             }
+            
+            .form-container {
+                margin: 0 10px;
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -246,7 +324,7 @@
     <div class="profile-widget" id="profileWidget">
         <img class="profile-avatar" id="userAvatar" src="https://via.placeholder.com/50" alt="Avatar">
         <div class="profile-info">
-            <div class="profile-name" id="userName">Загрузка...</div>
+            <div class="profile-name" id="profileName">Загрузка...</div>
             <div class="profile-status" id="userStatus">Telegram Mini App</div>
         </div>
     </div>
@@ -254,9 +332,35 @@
     <!-- Основной контент -->
     <div class="main-content">
         <h1 class="neon-title">Neon Mini App</h1>
-        <button class="neon-button" onclick="handleButtonClick()">
-            Начать взаимодействие
-        </button>
+        
+        <div class="form-container">
+            <div class="input-group">
+                <label class="neon-label" for="inputName">Имя:</label>
+                <input type="text" id="inputName" class="neon-input" placeholder="Введите ваше имя">
+            </div>
+            
+            <div class="input-group">
+                <label class="neon-label" for="inputAge">Возраст:</label>
+                <input type="number" id="inputAge" class="neon-input" placeholder="от 7 до 50" min="7" max="50">
+                <span class="error-message" id="ageError">Возраст должен быть от 7 до 50</span>
+            </div>
+            
+            <div class="input-group">
+                <label class="neon-label" for="inputNick">Игровой ник:</label>
+                <input type="text" id="inputNick" class="neon-input" placeholder="до 14 символов" maxlength="14">
+                <span class="error-message" id="nickError">Ник не должен превышать 14 символов</span>
+            </div>
+            
+            <div class="input-group">
+                <label class="neon-label" for="inputGameId">Игровой айди:</label>
+                <input type="text" id="inputGameId" class="neon-input" placeholder="начинается с 5, 9-12 цифр">
+                <span class="error-message" id="idError">ID должен начинаться с 5 и содержать 9-12 цифр</span>
+            </div>
+            
+            <button class="neon-button" onclick="handleFillButton()">
+                Заполнить
+            </button>
+        </div>
     </div>
 
     <script>
@@ -275,8 +379,12 @@
             const user = tg.initDataUnsafe?.user;
             
             if (user) {
-                // Обновляем имя пользователя
-                document.getElementById('userName').textContent = 
+                // Обновляем имя пользователя в профиле
+                document.getElementById('profileName').textContent = 
+                    user.first_name + (user.last_name ? ' ' + user.last_name : '');
+                
+                // Заполняем поле имени
+                document.getElementById('inputName').value = 
                     user.first_name + (user.last_name ? ' ' + user.last_name : '');
                 
                 // Обновляем аватар
@@ -304,22 +412,105 @@
                 }
             } else {
                 // Если данные недоступны, показываем заглушку
-                document.getElementById('userName').textContent = 'Гость';
+                document.getElementById('profileName').textContent = 'Гость';
                 document.getElementById('userStatus').textContent = 'Демо режим';
             }
         }
 
-        // Обработчик нажатия на кнопку
-        function handleButtonClick() {
+        // Валидация возраста
+        function validateAge(age) {
+            const ageNum = parseInt(age);
+            return !isNaN(ageNum) && ageNum >= 7 && ageNum <= 50;
+        }
+
+        // Валидация игрового ника
+        function validateNick(nick) {
+            return nick.length <= 14 && nick.length > 0;
+        }
+
+        // Валидация игрового ID
+        function validateGameId(gameId) {
+            const idRegex = /^5\d{8,11}$/;
+            return idRegex.test(gameId);
+        }
+
+        // Показать/скрыть ошибку
+        function toggleError(inputId, errorId, show) {
+            const input = document.getElementById(inputId);
+            const error = document.getElementById(errorId);
+            
+            if (show) {
+                input.classList.add('error');
+                error.classList.add('show');
+            } else {
+                input.classList.remove('error');
+                error.classList.remove('show');
+            }
+        }
+
+        // Обработчик нажатия на кнопку "Заполнить"
+        function handleFillButton() {
             // Вибрация для обратной связи
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
             }
 
+            // Получаем значения полей
+            const name = document.getElementById('inputName').value.trim();
+            const age = document.getElementById('inputAge').value;
+            const nick = document.getElementById('inputNick').value.trim();
+            const gameId = document.getElementById('inputGameId').value.trim();
+
+            // Сбрасываем предыдущие ошибки
+            toggleError('inputAge', 'ageError', false);
+            toggleError('inputNick', 'nickError', false);
+            toggleError('inputGameId', 'idError', false);
+
+            let hasErrors = false;
+
+            // Валидация полей
+            if (!validateAge(age)) {
+                toggleError('inputAge', 'ageError', true);
+                hasErrors = true;
+            }
+
+            if (!validateNick(nick)) {
+                toggleError('inputNick', 'nickError', true);
+                hasErrors = true;
+            }
+
+            if (!validateGameId(gameId)) {
+                toggleError('inputGameId', 'idError', true);
+                hasErrors = true;
+            }
+
+            if (hasErrors) {
+                // Вибрация ошибки
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+                return;
+            }
+
+            // Если все поля валидны
+            const formData = {
+                name: name,
+                age: parseInt(age),
+                nick: nick,
+                gameId: gameId
+            };
+
+            console.log('Данные формы:', formData);
+
+            // Вибрация успеха
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+
             // Показываем уведомление
             tg.showPopup({
-                title: 'Привет!',
-                message: 'Это неоновая мини-апп для Telegram!',
+                title: 'Успешно!',
+                message: `Данные сохранены:\nИмя: ${name}\nВозраст: ${age}\nНик: ${nick}\nID: ${gameId}`,
                 buttons: [{
                     text: 'Отлично!',
                     type: 'default'
@@ -327,9 +518,32 @@
             });
         }
 
-        // Инициализация при загрузке страницы
+        // Добавляем обработчики для real-time валидации
         document.addEventListener('DOMContentLoaded', function() {
             initUserData();
+            
+            // Валидация возраста при вводе
+            document.getElementById('inputAge').addEventListener('input', function() {
+                if (this.value) {
+                    toggleError('inputAge', 'ageError', !validateAge(this.value));
+                } else {
+                    toggleError('inputAge', 'ageError', false);
+                }
+            });
+
+            // Валидация ника при вводе
+            document.getElementById('inputNick').addEventListener('input', function() {
+                toggleError('inputNick', 'nickError', !validateNick(this.value));
+            });
+
+            // Валидация ID при вводе
+            document.getElementById('inputGameId').addEventListener('input', function() {
+                if (this.value) {
+                    toggleError('inputGameId', 'idError', !validateGameId(this.value));
+                } else {
+                    toggleError('inputGameId', 'idError', false);
+                }
+            });
             
             // Говорим Telegram, что страница готова
             tg.ready();
@@ -337,7 +551,6 @@
 
         // Обработка изменений темы
         tg.onEvent('themeChanged', function() {
-            // Можно добавить логику для адаптации под изменения темы
             console.log('Theme changed');
         });
     </script>
