@@ -10,7 +10,7 @@ from main.secret import prinatie_token as token
 import sqlite3
 import telebot
 from path import Path
-from telebot.types import CopyTextButton, InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import CopyTextButton, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 curent_path = (Path(__file__)).parent.parent
 main_path = curent_path / 'databases' / 'Base_bot.db'
@@ -89,7 +89,7 @@ def start(message):
     except telebot.apihelper.ApiTelegramException:
         pass
     buttons = [
-        telebot.types.InlineKeyboardButton(text="Вступить в клан", callback_data="new_member"),
+        telebot.types.InlineKeyboardButton(text="Вступить в клан", web_app=WebAppInfo('https://ezh-dev.ru/chat_manager_aiogram3/new_chat_mem_dir/index.html')),
         telebot.types.InlineKeyboardButton(text="Уже в клане", callback_data="not_new"),
         telebot.types.InlineKeyboardButton(text='Посмотреть канал Werty', url="https://t.me/Werty_Metro")
     ]
