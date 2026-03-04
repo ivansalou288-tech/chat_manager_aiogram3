@@ -82,12 +82,16 @@ class SendLinkToBotAction(BaseModel):
     activate_count: int
 
 class FormData(BaseModel):
-    telegram_id: int = None
-    user: str = None
+    telegram_id: int | None = None
+    user: str | None = None
     name: str
     age: int
     nick: str
     gameId: str
+    
+    class Config:
+        # Отключаем строгую валидацию для простоты
+        extra = "allow"
 
 chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
 
@@ -162,48 +166,72 @@ async def read_root():
         return HTMLResponse("<h1>Файл не найден</h1>", status_code=404)
 
 @app.post("/submit_form")
-async def submit_form(form_data: FormData):
+async def submit_form(request: Request):
     """
     Принимает заявку в клан и выводит её в консоль
     """
-    print("=" * 50)
-    print("НОВАЯ ЗАЯВКА В КЛАН:")
-    print(f"Telegram ID: {form_data.telegram_id}")
-    print(f"Username: @{form_data.user}" if form_data.user else "Username: отсутствует")
-    print(f"Имя: {form_data.name}")
-    print(f"Возраст: {form_data.age}")
-    print(f"Игровой ник: {form_data.nick}")
-    print(f"Игровой ID: {form_data.gameId}")
-    print(f"Время подачи: {datetime.now().strftime('%H:%M:%S %d.%m.%Y')}")
-    print("=" * 50)
-    
-    # Отправка уведомления в Telegram (если нужно)
     try:
-        if form_data.telegram_id:
-            await bot.send_message(
-                form_data.telegram_id,
-                f"✅ Ваша заявка в клан принята!\n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n⏳ Ожидайте рассмотрения."
-            )
-    except Exception as e:
-        print(f"Ошибка отправки уведомления: {e}")
-    
-    # Здесь можно добавить логику сохранения в базу данных
-    # Например: connection.execute("INSERT INTO clan_applications (...) VALUES (...)")
-    
-    # Возвращаем успешный ответ
-    return {
-        "status": "success",
-        "message": "Заявка в клан успешно принята",
-        "data": {
-            "telegram_id": form_data.telegram_id,
-            "user": form_data.user,
-            "name": form_data.name,
-            "age": form_data.age,
-            "nick": form_data.nick,
-            "gameId": form_data.gameId,
-            "submitted_at": datetime.now().isoformat()
+        # Получаем тело запроса
+        body = await request.body()
+        raw_data = body.decode('utf-8')
+        print(f"Полученные сырые данные: {raw_data}")
+        
+        # Парсим JSON
+        import json
+        data = json.loads(raw_data)
+        print(f"Распарсенные данные: {data}")
+        
+        # Создаем объект FormData вручную
+        form_data = FormData(**data)
+        
+        print("=" * 50)
+        print("НОВАЯ ЗАЯВКА В КЛАН:")
+        print(f"Telegram ID: {form_data.telegram_id}")
+        print(f"Username: @{form_data.user}" if form_data.user else "Username: отсутствует")
+        print(f"Имя: {form_data.name}")
+        print(f"Возраст: {form_data.age}")
+        print(f"Игровой ник: {form_data.nick}")
+        print(f"Игровой ID: {form_data.gameId}")
+        print(f"Время подачи: {datetime.now().strftime('%H:%M:%S %d.%m.%Y')}")
+        print("=" * 50)
+        
+        # Отправка уведомления в Telegram (если нужно)
+        try:
+            if form_data.telegram_id:
+                await bot.send_message(
+                    form_data.telegram_id,
+                    f"✅ Ваша заявка в клан принята!\n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n⏳ Ожидайте рассмотрения."
+                )
+        except Exception as e:
+            print(f"Ошибка отправки уведомления: {e}")
+        
+        # Возвращаем успешный ответ
+        return {
+            "status": "success",
+            "message": "Заявка в клан успешно принята",
+            "data": {
+                "telegram_id": form_data.telegram_id,
+                "user": form_data.user,
+                "name": form_data.name,
+                "age": form_data.age,
+                "nick": form_data.nick,
+                "gameId": form_data.gameId,
+                "submitted_at": datetime.now().isoformat()
+            }
         }
-    }
+        
+    except json.JSONDecodeError as e:
+        print(f"Ошибка парсинга JSON: {e}")
+        return {
+            "status": "error",
+            "message": f"Ошибка парсинга JSON: {str(e)}"
+        }
+    except Exception as e:
+        print(f"Общая ошибка: {e}")
+        return {
+            "status": "error", 
+            "message": f"Ошибка обработки: {str(e)}"
+        }
 
 
 async def get_users_sdk(chat: str):
