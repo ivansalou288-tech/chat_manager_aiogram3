@@ -155,8 +155,13 @@ async def perevod_start(message: Message):
     y = InlineKeyboardButton(text="-50k", callback_data="min_50")
     c = InlineKeyboardButton(text="Перевести", callback_data="perev")
     d = InlineKeyboardButton(text="Все", callback_data="all_p")
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(a, b).add(f, g).add(t, y).row(d).row(c)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [a, b],
+        [f, g],
+        [t, y],
+        [d],
+        [c]
+    ])
     message_id = (await message.answer(text=f'{mesh_money} В твоем мешке: {money} {meshok_self}  eZ¢\nТвой перевод: {perev}',parse_mode='html', reply_markup=keyboard)).message_id
     try:
         cursor.execute('INSERT INTO perevod (self_id, user_id, mess_id, stavka) VALUES (?, ?, ?, ?)', (self_id,user_id, message_id, 100))
@@ -202,8 +207,13 @@ async def plus_1000(call: CallbackQuery):
     y = InlineKeyboardButton(text="-50k", callback_data="min_50")
     c = InlineKeyboardButton(text="Перевести", callback_data="perev")
     d = InlineKeyboardButton(text="Все", callback_data="all_p")
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(a, b).add(f, g).add(t, y).row(d).row(c)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [a, b],
+        [f, g],
+        [t, y],
+        [d],
+        [c]
+    ])
 
     await call.message.edit_text(text=f'{mesh_money} В твоем мешке: {money} {meshok}  eZ¢\nТвой перевод: {stavka+1000}',parse_mode='html', reply_markup=keyboard)
     await call.answer()
@@ -237,8 +247,13 @@ async def minus_1000(call: CallbackQuery):
     y = InlineKeyboardButton(text="-50k", callback_data="min_50")
     c = InlineKeyboardButton(text="Перевести", callback_data="perev")
     d = InlineKeyboardButton(text="Все", callback_data="all_p")
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(a, b).add(f, g).add(t, y).row(d).row(c)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [a, b],
+        [f, g],
+        [t, y],
+        [d],
+        [c]
+    ])
     await call.message.edit_text(text=f'{mesh_money} В твоем мешке: {money} {meshok}  eZ¢\nТвой перевод: {stavka-1000}',parse_mode='html', reply_markup=keyboard)
     await call.answer()
 
@@ -272,8 +287,13 @@ async def plus_50k(call: CallbackQuery):
     y = InlineKeyboardButton(text="-50k", callback_data="min_50")
     c = InlineKeyboardButton(text="Перевести", callback_data="perev")
     d = InlineKeyboardButton(text="Все", callback_data="all_p")
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(a, b).add(f, g).add(t, y).row(d).row(c)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [a, b],
+        [f, g],
+        [t, y],
+        [d],
+        [c]
+    ])
 
     await call.message.edit_text(text=f'{mesh_money} В твоем мешке: {money} {meshok}  eZ¢\nТвой перевод: {stavka+50000}',parse_mode='html', reply_markup=keyboard)
     await call.answer()
@@ -307,8 +327,13 @@ async def minus_50k(call: CallbackQuery):
     y = InlineKeyboardButton(text="-50k", callback_data="min_50")
     c = InlineKeyboardButton(text="Перевести", callback_data="perev")
     d = InlineKeyboardButton(text="Все", callback_data="all_p")
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(a, b).add(f, g).add(t, y).row(d).row(c)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [a, b],
+        [f, g],
+        [t, y],
+        [d],
+        [c]
+    ])
 
     await call.message.edit_text(text=f'{mesh_money} В твоем мешке: {money} {meshok}  eZ¢\nТвой перевод: {stavka-50000}',parse_mode='html', reply_markup=keyboard)
     await call.answer()
@@ -343,8 +368,13 @@ async def plus_100(call: CallbackQuery):
     y = InlineKeyboardButton(text="-50k", callback_data="min_50")
     c = InlineKeyboardButton(text="Перевести", callback_data="perev")
     d = InlineKeyboardButton(text="Все", callback_data="all_p")
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(a, b).add(f, g).add(t, y).row(d).row(c)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [a, b],
+        [f, g],
+        [t, y],
+        [d],
+        [c]
+    ])
 
     await call.message.edit_text(text=f'{mesh_money} В твоем мешке: {money} {meshok}  eZ¢\nТвой перевод: {stavka+100}',parse_mode='html', reply_markup=keyboard)
     await call.answer()
@@ -378,8 +408,13 @@ async def minus_100(call: CallbackQuery):
     y = InlineKeyboardButton(text="-50k", callback_data="min_50")
     c = InlineKeyboardButton(text="Перевести", callback_data="perev")
     d = InlineKeyboardButton(text="Все", callback_data="all_p")
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(a, b).add(f, g).add(t, y).row(d).row(c)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [a, b],
+        [f, g],
+        [t, y],
+        [d],
+        [c]
+    ])
 
     await call.message.edit_text(text=f'{mesh_money} В твоем мешке: {money} {meshok}  eZ¢\nТвой перевод: {stavka-100}',parse_mode='html', reply_markup=keyboard)
     await call.answer()
@@ -412,8 +447,13 @@ async def all_perevod(call: CallbackQuery):
     y = InlineKeyboardButton(text="-50k", callback_data="min_50")
     c = InlineKeyboardButton(text="Перевести", callback_data="perev")
     d = InlineKeyboardButton(text="Все", callback_data="all_p")
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(a, b).add(f, g).add(t, y).row(d).row(c)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [a, b],
+        [f, g],
+        [t, y],
+        [d],
+        [c]
+    ])
 
     await call.message.edit_text(text=f'{mesh_money} В твоем мешке: {money} {meshok}  eZ¢\nТвой перевод: {meshok}',parse_mode='html', reply_markup=keyboard)
     await call.answer()
