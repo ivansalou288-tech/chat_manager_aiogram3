@@ -334,14 +334,14 @@ async def submit_form(request: Request):
                 print(f"Ошибка при обновлении активаций: {e}")
         
         # Отправка уведомления в Telegram (если нужно)
-        if True:
+        try:
             connection = sqlite3.connect(main_path, check_same_thread=False)
             cursor = connection.cursor()
 
             if form_data.telegram_id:
                 # Добавляем в основной клан
                 cursor.execute(
-                    f'INSERT INTO [{-chats_names["klan"]}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    f'INSERT INTO [{klan}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     (form_data.telegram_id, form_data.user, form_data.name, form_data.age, form_data.nick, form_data.gameId, form_data.nick, 0, '', datetime.now().strftime('%H:%M:%S %d.%m.%Y'))
                 )
                 connection.commit()
@@ -359,7 +359,7 @@ async def submit_form(request: Request):
                 if form_data.sost == 1:
                     try:
                         cursor.execute(
-                            f'INSERT INTO [{-chats_names["sost-1"]}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                            f'INSERT INTO [{sost_1}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                             (form_data.telegram_id, form_data.user, form_data.name, form_data.age, form_data.nick, form_data.gameId, form_data.nick, 0, '', datetime.now().strftime('%H:%M:%S %d.%m.%Y'))
                         )
                     except Exception:
@@ -369,7 +369,7 @@ async def submit_form(request: Request):
                 elif form_data.sost == 2:
                     try:
                         cursor.execute(
-                            f'INSERT INTO [{-chats_names["sost-2"]}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                            f'INSERT INTO [{sost_2}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                             (form_data.telegram_id, form_data.user, form_data.name, form_data.age, form_data.nick, form_data.gameId, form_data.nick, 0, '', datetime.now().strftime('%H:%M:%S %d.%m.%Y'))
                         )
                     except Exception:
@@ -424,8 +424,8 @@ async def submit_form(request: Request):
                     form_data.telegram_id,
                     f"✅ Ваша заявка в клан принята!\n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n⏳ Ожидайте рассмотрения."
                 )
-        # except Exception as e:
-        #     print(f"Ошибка отправки уведомления: {e}")
+        except Exception as e:
+            print(f"Ошибка отправки уведомления: {e}")
         
 
 
