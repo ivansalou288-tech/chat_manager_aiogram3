@@ -331,7 +331,7 @@
 
     <!-- Основной контент -->
     <div class="main-content">
-        <h1 class="neon-title">Neon Mini App</h1>
+        <h1 class="neon-title">Заполнение описания</h1>
         
         <div class="form-container">
             <div class="input-group">
@@ -341,7 +341,7 @@
             
             <div class="input-group">
                 <label class="neon-label" for="inputAge">Возраст:</label>
-                <input type="number" id="inputAge" class="neon-input" placeholder="от 7 до 50" min="7" max="50">
+                <input type="tel" id="inputAge" class="neon-input" placeholder="от 7 до 50" pattern="[0-9]*" inputmode="numeric">
                 <span class="error-message" id="ageError">Возраст должен быть от 7 до 50</span>
             </div>
             
@@ -353,7 +353,7 @@
             
             <div class="input-group">
                 <label class="neon-label" for="inputGameId">Игровой айди:</label>
-                <input type="text" id="inputGameId" class="neon-input" placeholder="начинается с 5, 9-12 цифр">
+                <input type="tel" id="inputGameId" class="neon-input" placeholder="начинается с 5, 9-12 цифр" pattern="[0-9]*" inputmode="numeric">
                 <span class="error-message" id="idError">ID должен начинаться с 5 и содержать 9-12 цифр</span>
             </div>
             
