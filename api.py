@@ -118,12 +118,12 @@ async def gaid(chat_id):
     )
     
     # Отправка группы фото
-    from aiogram.types import InputMedia
+    from aiogram.types import InputMediaPhoto, InputMediaDocument, InputMediaVideo, InputMediaAudio
     await prinatie_bot.send_media_group(
         chat_id, 
         media=[
-            InputMedia(media=FSInputFile(f'{curent_path}/photos/first_step.jpg'), type='photo'),
-            InputMedia(media=FSInputFile(f'{curent_path}/photos/second_step.jpg'), type='photo')
+            InputMediaPhoto(media=FSInputFile(f'{curent_path}/photos/first_step.jpg')),
+            InputMediaPhoto(media=FSInputFile(f'{curent_path}/photos/second_step.jpg'))
         ]
     )
     
@@ -136,8 +136,8 @@ async def gaid(chat_id):
     await prinatie_bot.send_media_group(
         chat_id,
         media=[
-            InputMedia(media=FSInputFile(f'{curent_path}/photos/therd_step.jpg'), type='photo'),
-            InputMedia(media=FSInputFile(f'{curent_path}/photos/last_step.jpg'), type='photo')
+            InputMediaPhoto(media=FSInputFile(f'{curent_path}/photos/therd_step.jpg')),
+            InputMediaPhoto(media=FSInputFile(f'{curent_path}/photos/last_step.jpg'))
         ]
     )
 
@@ -410,11 +410,10 @@ async def submit_form(request: Request):
                 
                 # Отправляем фото с инструкцией
                 try:
-                    from aiogram.types.input_file import FSInputFile
+                    from aiogram.types import InputMediaPhoto
                     await prinatie_bot.send_photo(
                         chat_id=form_data.telegram_id,
-                        photo=FSInputFile(f'{curent_path}/photos/is_klan.jpg'),
-                        caption="После того как ты ознакомился с информацией выше, кинь скрин того как ты кинул в клан"
+                        photo=InputMediaPhoto(media=f'{curent_path}/photos/is_klan.jpg', caption="После того как ты ознакомился с информацией выше, кинь скрин того как ты кинул в клан")
                     )
                 except Exception:
                     pass
