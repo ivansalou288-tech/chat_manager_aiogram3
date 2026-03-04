@@ -281,6 +281,36 @@ async def check_invite_code(request: Request):
             "message": f"Ошибка проверки: {str(e)}"
         }
 
+@app.get("/get_rules")
+async def get_rules():
+    try:
+        connection = sqlite3.connect(datahelp_path, check_same_thread=False)
+        cursor = connection.cursor()
+        
+        # Получаем правила из базы данных
+        cursor.execute('SELECT text FROM texts WHERE text_name = ?', ('pravils',))
+        result = cursor.fetchall()
+        
+        if result:
+            rules_text = result[0][0]
+            return {
+                "status": "success",
+                "data": {
+                    "rules": rules_text
+                }
+            }
+        else:
+            return {
+                "status": "error",
+                "message": "Правила не найдены"
+            }
+    except Exception as e:
+        print(f"Ошибка при получении правил: {e}")
+        return {
+            "status": "error",
+            "message": "Ошибка сервера"
+        }
+
 @app.post("/submit_form")
 async def submit_form(request: Request):
     """

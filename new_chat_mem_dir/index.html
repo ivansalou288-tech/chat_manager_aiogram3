@@ -597,37 +597,68 @@
         }
 
         // Функция показа правил и гайда
-        function showRulesAndGuide() {
+        async function showRulesAndGuide() {
             // Скрываем все контейнеры
             document.getElementById('codeContainer').style.display = 'none';
             document.getElementById('formContainer').style.display = 'none';
             
-            // Показываем правила
+            try {
+                // Получаем правила с сервера
+                const response = await fetch('/get_rules');
+                const data = await response.json();
+                
+                let rulesContent = '';
+                if (data.status === 'success' && data.data.rules) {
+                    rulesContent = data.data.rules;
+                } else {
+                    rulesContent = '📋 Основные правила:\n• Уважай других игроков\n• Не используй читеры\n• Участвуй в войнах клана\n• Соблюдай дисциплину\n\n🎮 Игровые требования:\n• Активность 3+ раза в неделю\n• Уровень 50+\n• Наличие микрофона';
+                }
+                
+                // Показываем правила
+                const rulesContainer = document.createElement('div');
+                rulesContainer.className = 'form-container';
+                rulesContainer.innerHTML = `
+                    <h2 class="neon-title">Правила клана</h2>
+                    <div class="rules-content">
+                        <pre style="white-space: pre-wrap; font-family: inherit; color: white;">${rulesContent}</pre>
+                    </div>
+                    <button class="neon-button" onclick="showGuide()">
+                        Как вступить в клан
+                    </button>
+                `;
+                
+                // Заменяем основной контент, но сохраняем заголовок
+                const mainContent = document.querySelector('.main-content');
+                const title = mainContent.querySelector('.neon-title');
+                mainContent.innerHTML = '';
+                if (title) {
+                    mainContent.appendChild(title);
+                }
+                mainContent.appendChild(rulesContainer);
+                
+            } catch (error) {
+                console.error('Ошибка при загрузке правил:', error);
+                // Показываем правила по умолчанию
+                showDefaultRules();
+            }
+        }
+
+        // Функция показа правил по умолчанию
+        function showDefaultRules() {
+            const defaultRules = '📋 Основные правила:\n• Уважай других игроков\n• Не используй читеры\n• Участвуй в войнах клана\n• Соблюдай дисциплину\n\n🎮 Игровые требования:\n• Активность 3+ раза в неделю\n• Уровень 50+\n• Наличие микрофона';
+            
             const rulesContainer = document.createElement('div');
             rulesContainer.className = 'form-container';
             rulesContainer.innerHTML = `
                 <h2 class="neon-title">Правила клана</h2>
                 <div class="rules-content">
-                    <p>📋 <b>Основные правила:</b></p>
-                    <ul>
-                        <li>• Уважай других игроков</li>
-                        <li>• Не используй читеры</li>
-                        <li>• Участвуй в войнах клана</li>
-                        <li>• Соблюдай дисциплину</li>
-                    </ul>
-                    <p>🎮 <b>Игровые требования:</b></p>
-                    <ul>
-                        <li>• Активность 3+ раза в неделю</li>
-                        <li>• Уровень 50+</li>
-                        <li>• Наличие микрофона</li>
-                    </ul>
+                    <pre style="white-space: pre-wrap; font-family: inherit; color: white;">${defaultRules}</pre>
                 </div>
                 <button class="neon-button" onclick="showGuide()">
                     Как вступить в клан
                 </button>
             `;
             
-            // Заменяем основной контент, но сохраняем заголовок
             const mainContent = document.querySelector('.main-content');
             const title = mainContent.querySelector('.neon-title');
             mainContent.innerHTML = '';
