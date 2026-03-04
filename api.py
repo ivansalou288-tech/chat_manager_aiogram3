@@ -310,6 +310,57 @@ async def get_rules():
             "message": "Ошибка сервера"
         }
 
+@app.post("/upload_photo")
+async def upload_photo(request: Request):
+    """
+    Принимает фото скриншота отправленного запроса в клан
+    """
+    try:
+        # Получаем форму с файлом
+        form = await request.form()
+        photo = form.get("photo")
+        telegram_id = form.get("telegram_id")
+        username = form.get("username")
+        
+        if not photo:
+            return {
+                "status": "error",
+                "message": "Фото не найдено"
+            }
+        
+        # Сохраняем фото
+        photo_filename = f"screen_{telegram_id}_{int(time.time())}.jpg"
+        photo_path = curent_path / "screenshots" / photo_filename
+        
+        # Создаем директорию если не существует
+        photo_path.parent.mkdir(exist_ok=True)
+        
+        # Сохраняем файл
+        with open(photo_path, "wb") as buffer:
+            content = await photo.read()
+            buffer.write(content)
+        
+        print(f"Получен скриншот от пользователя {telegram_id} (@{username}): {photo_filename}")
+        
+        # Здесь можно добавить логику для отправки фото в Telegram или сохранения в БД
+        
+        return {
+            "status": "success",
+            "message": "Скриншот успешно загружен",
+            "data": {
+                "filename": photo_filename,
+                "telegram_id": telegram_id,
+                "username": username
+            }
+        }
+        
+    except Exception as e:
+        print(f"Ошибка при загрузке фото: {e}")
+        return {
+            "status": "error",
+            "message": f"Ошибка загрузки: {str(e)}"
+        }
+
 @app.post("/submit_form")
 async def submit_form(request: Request):
     """

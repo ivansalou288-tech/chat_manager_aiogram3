@@ -245,6 +245,52 @@
     flex: 1;
 }
 
+/* Стили для загрузки фото */
+.upload-area {
+    border: 2px dashed rgba(138, 43, 226, 0.3);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    margin: 20px 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: rgba(26, 0, 51, 0.3);
+}
+
+.upload-area:hover {
+    border-color: rgba(138, 43, 226, 0.6);
+    background: rgba(26, 0, 51, 0.5);
+}
+
+.upload-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.upload-placeholder p {
+    margin: 5px 0;
+    color: #ffffff;
+}
+
+.photo-preview {
+    text-align: center;
+}
+
+.photo-upload-content {
+    background: rgba(26, 0, 51, 0.7);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+.next-step-content {
+    background: rgba(26, 0, 51, 0.7);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid rgba(138, 43, 226, 0.3);
+    text-align: center;
+}
+
         .neon-button {
             background: linear-gradient(45deg, #8a2be2, #9333ea);
             border: none;
@@ -685,9 +731,178 @@
                     <p>После одобрения заявки следуй инструкциям бота</p>
                     
                     <div class="guide-buttons">
+                        <button class="neon-button" onclick="showPhotoUpload()">
+                            Я отправил запрос
+                        </button>
                         <button class="neon-button" onclick="location.reload()">
                             Вернуться к началу
                         </button>
+                    </div>
+                </div>
+            `;
+            
+            const mainContent = document.querySelector('.main-content');
+            const title = mainContent.querySelector('.neon-title');
+            mainContent.innerHTML = '';
+            if (title) {
+                mainContent.appendChild(title);
+            }
+            mainContent.appendChild(guideContainer);
+        }
+
+        // Функция загрузки фото
+        function showPhotoUpload() {
+            const photoContainer = document.createElement('div');
+            photoContainer.className = 'form-container';
+            photoContainer.innerHTML = `
+                <h2 class="neon-title">Загрузка скриншота</h2>
+                <div class="photo-upload-content">
+                    <p>📸 <b>Сделайте скриншот</b> отправленного запроса в клан</p>
+                    <p>Это нужно для подтверждения вашей заявки</p>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handlePhotoSelect(event)">
+                        <div class="upload-placeholder" onclick="document.getElementById('photoInput').click()">
+                            <div class="upload-icon">📷</div>
+                            <p>Нажмите для выбора фото</p>
+                            <p style="font-size: 12px; opacity: 0.7;">Или перетащите файл сюда</p>
+                        </div>
+                        <div class="photo-preview" id="photoPreview" style="display: none;">
+                            <img id="previewImage" src="" alt="Preview" style="max-width: 100%; border-radius: 10px;">
+                            <button class="neon-button" onclick="submitPhoto()" style="margin-top: 15px;">
+                                Отправить скриншот
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-buttons">
+                        <button class="neon-button" onclick="showGuide()">
+                            Назад
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const mainContent = document.querySelector('.main-content');
+            const title = mainContent.querySelector('.neon-title');
+            mainContent.innerHTML = '';
+            if (title) {
+                mainContent.appendChild(title);
+            }
+            mainContent.appendChild(photoContainer);
+            
+            // Добавляем обработчики для drag & drop
+            setupDragAndDrop();
+        }
+
+        // Функция обработки выбора фото
+        function handlePhotoSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.querySelector('.upload-placeholder').style.display = 'none';
+                    document.getElementById('photoPreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Настройка drag & drop
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#8a2be2';
+                uploadArea.style.backgroundColor = 'rgba(138, 43, 226, 0.1)';
+            });
+            
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(138, 43, 226, 0.3)';
+                uploadArea.style.backgroundColor = 'transparent';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(138, 43, 226, 0.3)';
+                uploadArea.style.backgroundColor = 'transparent';
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type.startsWith('image/')) {
+                    const input = document.getElementById('photoInput');
+                    input.files = files;
+                    handlePhotoSelect({ target: input });
+                }
+            });
+        }
+
+        // Функция отправки фото
+        function submitPhoto() {
+            const input = document.getElementById('photoInput');
+            const file = input.files[0];
+            
+            if (!file) return;
+            
+            // Создаем FormData для отправки файла
+            const formData = new FormData();
+            formData.append('photo', file);
+            
+            // Получаем данные пользователя
+            const userData = tg.initDataUnsafe?.user;
+            formData.append('telegram_id', userData?.id || null);
+            formData.append('username', userData?.username || null);
+            
+            // Отправляем фото на сервер
+            fetch('https://ezh-dev.ru:8000/upload_photo', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Ответ сервера:', data);
+                
+                if (data.status === 'success') {
+                    // Переходим на следующий шаг
+                    showNextStep();
+                } else {
+                    tg.showPopup({
+                        title: 'Ошибка!',
+                        message: data.message || 'Не удалось загрузить фото',
+                        buttons: [{
+                            text: 'Понятно',
+                            type: 'default'
+                        }]
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке фото:', error);
+                tg.showPopup({
+                    title: 'Ошибка!',
+                    message: 'Не удалось загрузить фото. Попробуйте еще раз.',
+                    buttons: [{
+                        text: 'Понятно',
+                        type: 'default'
+                    }]
+                });
+            });
+        }
+
+        // Функция следующего шага (пока пустая)
+        function showNextStep() {
+            const nextContainer = document.createElement('div');
+            nextContainer.className = 'form-container';
+            nextContainer.innerHTML = `
+                <h2 class="neon-title">Завершение</h2>
+                <div class="next-step-content">
+                    <p>✅ <b>Скриншот успешно отправлен!</b></p>
+                    <p>Ваша заявка находится на рассмотрении.</p>
+                    <p>Ожидайте ответа от администрации клана.</p>
+                    
+                    <div class="guide-buttons">
                         <button class="neon-button" onclick="tg.close()">
                             Закрыть MiniApp
                         </button>
@@ -701,7 +916,7 @@
             if (title) {
                 mainContent.appendChild(title);
             }
-            mainContent.appendChild(guideContainer);
+            mainContent.appendChild(nextContainer);
         }
 
         // Обработчик нажатия на кнопку "Подать заявку"
