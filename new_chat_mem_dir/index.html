@@ -336,7 +336,7 @@
         <!-- Форма ввода кода -->
         <div class="form-container" id="codeContainer">
             <div class="input-group">
-                <label class="neon-label" for="inputCode">Код приглашения:</label>
+                <label class="neon-label" for="inputCode">Код вступления:</label>
                 <input type="text" id="inputCode" class="neon-input" placeholder="Введите код приглашения">
                 <span class="error-message" id="codeError">Неверный код приглашения</span>
             </div>
@@ -642,24 +642,8 @@
                     type: 'default'
                 }]
             }).then(() => {
-                // Пытаемся закрыть мини-приложение
-                try {
-                    tg.close();
-                } catch (e) {
-                    console.log('Не удалось закрыть приложение:', e);
-                    // Если не удалось закрыть, возвращаем на страницу кода
-                    document.getElementById('formContainer').style.display = 'none';
-                    document.getElementById('codeContainer').style.display = 'block';
-                    
-                    // Очищаем поля формы
-                    document.getElementById('inputName').value = '';
-                    document.getElementById('inputAge').value = '';
-                    document.getElementById('inputNick').value = '';
-                    document.getElementById('inputGameId').value = '';
-                    
-                    // Сбрасываем данные кода
-                    currentCodeData = null;
-                }
+                // Просто обновляем страницу
+                location.reload();
             });
         }
 
