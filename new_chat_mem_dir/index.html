@@ -844,7 +844,14 @@
             const input = document.getElementById('photoInput');
             const file = input.files[0];
             
-            if (!file) return;
+            if (!file) {
+                console.error('Файл не выбран');
+                return;
+            }
+            
+            console.log('Отправка файла:', file);
+            console.log('Размер файла:', file.size, 'байт');
+            console.log('Тип файла:', file.type);
             
             // Создаем FormData для отправки файла
             const formData = new FormData();
@@ -852,15 +859,27 @@
             
             // Получаем данные пользователя
             const userData = tg.initDataUnsafe?.user;
-            formData.append('telegram_id', userData?.id || null);
-            formData.append('username', userData?.username || null);
+            const telegram_id = userData?.id || null;
+            const username = userData?.username || null;
+            
+            formData.append('telegram_id', telegram_id);
+            formData.append('username', username);
+            
+            console.log('Данные пользователя:', { telegram_id, username });
+            console.log('FormData содержимое:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
             
             // Отправляем фото на сервер
             fetch('https://ezh-dev.ru:8000/upload_photo', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Статус ответа:', response.status);
+                return response.json();
+            })
             .then(data => {
                 console.log('Ответ сервера:', data);
                 

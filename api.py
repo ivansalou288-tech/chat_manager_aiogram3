@@ -322,6 +322,8 @@ async def upload_photo(request: Request):
         telegram_id = form.get("telegram_id")
         username = form.get("username")
         
+        print(f"Получены данные: photo={photo}, telegram_id={telegram_id}, username={username}")
+        
         if not photo:
             return {
                 "status": "error",
@@ -330,10 +332,14 @@ async def upload_photo(request: Request):
         
         # Сохраняем фото
         photo_filename = f"screen_{telegram_id}_{int(time.time())}.jpg"
-        photo_path = curent_path / "screenshots" / photo_filename
         
-        # Создаем директорию если не существует
-        photo_path.parent.mkdir(exist_ok=True)
+        # Используем абсолютный путь
+        import os
+        screenshots_dir = os.path.join(os.path.dirname(__file__), "screenshots")
+        os.makedirs(screenshots_dir, exist_ok=True)
+        photo_path = os.path.join(screenshots_dir, photo_filename)
+        
+        print(f"Путь для сохранения: {photo_path}")
         
         # Сохраняем файл
         with open(photo_path, "wb") as buffer:
@@ -341,6 +347,7 @@ async def upload_photo(request: Request):
             buffer.write(content)
         
         print(f"Получен скриншот от пользователя {telegram_id} (@{username}): {photo_filename}")
+        print(f"Размер файла: {os.path.getsize(photo_path)} байт")
         
         # Здесь можно добавить логику для отправки фото в Telegram или сохранения в БД
         
@@ -356,6 +363,8 @@ async def upload_photo(request: Request):
         
     except Exception as e:
         print(f"Ошибка при загрузке фото: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             "status": "error",
             "message": f"Ошибка загрузки: {str(e)}"
