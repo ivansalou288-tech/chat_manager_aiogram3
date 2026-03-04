@@ -148,18 +148,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Обслуживание статических файлов
-app.mount("/static", StaticFiles(directory="new_chat_mem_dir"), name="static")
+# # Обслуживание статических файлов
+# app.mount("/static", StaticFiles(directory="new_chat_mem_dir"), name="static")
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    # Отдаем HTML файл
-    try:
-        with open("new_chat_mem_dir/index.html", "r", encoding="utf-8") as f:
-            content = f.read()
-        return HTMLResponse(content=content)
-    except FileNotFoundError:
-        return HTMLResponse("<h1>Файл не найден</h1>", status_code=404)
+# @app.get("/", response_class=HTMLResponse)
+# async def read_root():
+#     # Отдаем HTML файл
+#     try:
+#         with open("new_chat_mem_dir/index.html", "r", encoding="utf-8") as f:
+#             content = f.read()
+#         return HTMLResponse(content=content)
+#     except FileNotFoundError:
+#         return HTMLResponse("<h1>Файл не найден</h1>", status_code=404)
 
 @app.post("/submit_form")
 async def submit_form(request: Request):
