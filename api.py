@@ -260,6 +260,26 @@ async def submit_form(request: Request):
         print(f"Время подачи: {datetime.now().strftime('%H:%M:%S %d.%m.%Y')}")
         print("=" * 50)
         
+        # Уменьшаем количество активаций кода
+        if form_data.invite_code:
+            try:
+                connection = sqlite3.connect(datahelp_path, check_same_thread=False)
+                cursor = connection.cursor()
+                cursor.execute(
+                    'UPDATE links_for_sosts SET activate_count = activate_count - 1 WHERE link_text = ?',
+                    (form_data.invite_code,)
+                )
+                connection.commit()
+                
+                # Проверяем новое количество активаций
+                cursor.execute('SELECT activate_count FROM links_for_sosts WHERE link_text = ?', (form_data.invite_code,))
+                new_count = cursor.fetchone()
+                print(f"Осталось активаций для кода {form_data.invite_code}: {new_count[0] if new_count else 0}")
+                connection.close()
+                
+            except Exception as e:
+                print(f"Ошибка при обновлении активаций: {e}")
+        
         # Отправка уведомления в Telegram (если нужно)
         try:
             if form_data.telegram_id:
