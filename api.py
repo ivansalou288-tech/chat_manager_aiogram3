@@ -284,9 +284,8 @@ async def check_invite_code(request: Request):
 @app.get("/get_rules")
 async def get_rules():
     try:
-        connection = sqlite3.connect(datahelp_path, check_same_thread=False)
+        connection = sqlite3.connect(main_path, check_same_thread=False)
         cursor = connection.cursor()
-        
         # Получаем правила из базы данных
         cursor.execute('SELECT text FROM texts WHERE text_name = ?', ('pravils',))
         result = cursor.fetchall()
