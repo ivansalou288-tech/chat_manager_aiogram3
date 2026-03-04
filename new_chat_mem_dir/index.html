@@ -636,14 +636,16 @@
 
             tg.showPopup({
                 title: 'Заявка отправлена!',
-                message: 'Ваша заявка в клан успешно отправлена. Ожидайте рассмотрения.',
+                message: 'Закройте MiniApp и посмотрите инструкции от бота',
                 buttons: [{
                     text: 'Отлично!',
                     type: 'default'
                 }]
             }).then(() => {
                 // Просто обновляем страницу
-                location.reload();
+                 
+                window.location.reload();
+                tg.close()
             });
         }
 
