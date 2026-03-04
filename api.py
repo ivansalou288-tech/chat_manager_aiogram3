@@ -10,7 +10,7 @@ from pydantic import BaseModel
 import asyncio
 from datetime import datetime
 import password_generator
-from typing import Any
+from typing import Any, Optional
 # Добавляем корневую директорию проекта в путь
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, ROOT_DIR)
@@ -22,76 +22,72 @@ TOKEN = main.secret.main_token
 bot = Bot(token=TOKEN)
 class RecomRemoveAction(BaseModel):
     rec_id: str
-    user_id: int | None = None
-    admin_id: int | None = None
-    admin_name: str | None = None
-    admin_username: str | None = None
+    user_id: Optional[int] = None
+    admin_id: Optional[int] = None
+    admin_name: Optional[str] = None
+    admin_username: Optional[str] = None
 
 class UserAction(BaseModel):
     chat: str
     userid: str
-    admin_id: int | None = None
-    admin_name: str | None = None
-    admin_username: str | None = None
+    admin_id: Optional[int] = None
+    admin_name: Optional[str] = None
+    admin_username: Optional[str] = None
 
 class SnatWarnAction(BaseModel):
     chat: str
     userid: str
     num: int
-    admin_id: int | None = None
-    admin_name: str | None = None
-    admin_username: str | None = None
+    admin_id: Optional[int] = None
+    admin_name: Optional[str] = None
+    admin_username: Optional[str] = None
 
 class BanAction(BaseModel):
     chat: str
     userid: str
     reason: str
-    admin_id: int | None = None
-    admin_name: str | None = None
-    admin_username: str | None = None
+    admin_id: Optional[int] = None
+    admin_name: Optional[str] = None
+    admin_username: Optional[str] = None
 
 class RecomAddAction(BaseModel):
     user_id: int
     reason: str
     position: str
-    username: str | None = None
-    pubg_nik: str | None = None
-    admin_id: int | None = None
-    admin_name: str | None = None
-    admin_username: str | None = None
+    username: Optional[str] = None
+    pubg_nik: Optional[str] = None
+    admin_id: Optional[int] = None
+    admin_name: Optional[str] = None
+    admin_username: Optional[str] = None
 
 class CreateLinkAction(BaseModel):
     sost: int
     activate_count: int
-    admin_id: int | None = None
-    admin_name: str | None = None
-    admin_username: str | None = None
+    admin_id: Optional[int] = None
+    admin_name: Optional[str] = None
+    admin_username: Optional[str] = None
 
 class DeleteLinkAction(BaseModel):
     link: str
-    admin_id: int | None = None
-    admin_name: str | None = None
-    admin_username: str | None = None
+    admin_id: Optional[int] = None
+    admin_name: Optional[str] = None
+    admin_username: Optional[str] = None
 
 class SendLinkToBotAction(BaseModel):
     link: str
-    admin_id: int | None = None
-    admin_name: str | None = None
-    admin_username: str | None = None
+    admin_id: Optional[int] = None
+    admin_name: Optional[str] = None
+    admin_username: Optional[str] = None
     sost: int
     activate_count: int
 
 class FormData(BaseModel):
-    telegram_id: int | None = None
-    user: str | None = None
+    telegram_id: Optional[int] = None
+    user: Optional[str] = None
     name: str
     age: int
     nick: str
     gameId: str
-    
-    class Config:
-        # Отключаем строгую валидацию для простоты
-        extra = "allow"
 
 chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
 
@@ -99,14 +95,14 @@ chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439
 #* RU: ID пользователей, которым разрешен доступ к админ-панели
 can_admin_panel = [8015726709, 1401086794, 1240656726]
 
-def check_admin_rights(admin_id: int | None) -> bool:
+def check_admin_rights(admin_id: Optional[int]) -> bool:
     """Проверяет права доступа администратора"""
     if admin_id is None:
         return False
     return admin_id in can_admin_panel
 
 
-def build_admin_link(admin_id: int | None, admin_username: str | None = None) -> str | None:
+def build_admin_link(admin_id: Optional[int], admin_username: Optional[str] = None) -> Optional[str]:
     if admin_username:
         u = admin_username.lstrip('@')
         if u:
@@ -116,7 +112,7 @@ def build_admin_link(admin_id: int | None, admin_username: str | None = None) ->
     return None
 
 
-def ensure_not_self_action(admin_id: int | None, target_user_id: int | None, action_name: str) -> None:
+def ensure_not_self_action(admin_id: Optional[int], target_user_id: Optional[int], action_name: str) -> None:
     if admin_id is None or target_user_id is None:
         return
     if int(admin_id) == int(target_user_id):
@@ -392,7 +388,7 @@ async def insert_ban_user(user_id, user_men, moder_men, comments, message_id, ch
 
     connection.commit()
 
-async def admin_ban(chat: str, user_id: int, reason: str | None, admin_id: int | None = None, admin_name: str | None = None) -> any:
+async def admin_ban(chat: str, user_id: int, reason: Optional[str], admin_id: Optional[int] = None, admin_name: Optional[str] = None) -> any:
 
         user_men = GetUserByID(user_id).mention
         admin_display = admin_name or "Некий админ"

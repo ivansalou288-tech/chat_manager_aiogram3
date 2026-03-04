@@ -518,7 +518,7 @@
             console.log('Отправка заявки в клан:', formData);
 
             // Отправка данных на сервер
-            fetch('/submit_form', {
+            fetch(`https://ezh-dev.ru:8000/users/submit_form`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
