@@ -1,3 +1,4 @@
+from math import log
 import sqlite3
 import os
 import ssl
@@ -11,6 +12,7 @@ import asyncio
 from datetime import datetime
 import password_generator
 from typing import Any, Optional
+import time
 # Добавляем корневую директорию проекта в путь
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, ROOT_DIR)
@@ -98,6 +100,48 @@ chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439
 #? EN: User IDs allowed to access admin panel
 #* RU: ID пользователей, которым разрешен доступ к админ-панели
 can_admin_panel = [8015726709, 1401086794, 1240656726]
+
+
+async def gaid(chat_id):
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CopyTextButton
+    from aiogram.types.input_file import FSInputFile
+    
+    id_copy = CopyTextButton(text=str(51445023900))
+    id_btn = InlineKeyboardButton(text="📋Скопировать айди Лидера", copy_text=id_copy)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[id_btn]])
+    
+    await prinatie_bot.send_message(
+        chat_id,
+        text='Как вступить в клан?\n\n<b>1.</b> Ищешь игрока wePiKAcHy по айди «<code>51445023900</code>» и нажимаешь на его аватарку',
+        parse_mode='html', 
+        reply_markup=keyboard
+    )
+    
+    # Отправка группы фото
+    from aiogram.types.input_media import InputMediaPhoto
+    await prinatie_bot.send_media_group(
+        chat_id, 
+        media=[
+            InputMediaPhoto(media=FSInputFile(f'{curent_path}/photos/first_step.jpg')),
+            InputMediaPhoto(media=FSInputFile(f'{curent_path}/photos/second_step.jpg'))
+        ]
+    )
+    
+    await prinatie_bot.send_message(
+        chat_id,
+        text='<b>2.</b> В его профиле нажимаешь на аватарку клана «Werty» и в всплышем окне нажимаешь на запрос',
+        parse_mode='html'
+    )
+    
+    await prinatie_bot.send_media_group(
+        chat_id,
+        media=[
+            InputMediaPhoto(media=FSInputFile(f'{curent_path}/photos/therd_step.jpg')),
+            InputMediaPhoto(media=FSInputFile(f'{curent_path}/photos/last_step.jpg'))
+        ]
+    )
+
+
 
 def check_admin_rights(admin_id: Optional[int]) -> bool:
     """Проверяет права доступа администратора"""
@@ -201,6 +245,15 @@ async def check_invite_code(request: Request):
         if result:
             link_text, activate_count, sost = result
             if activate_count > 0:
+                # activate_count_new = activate_count - 1
+                # if activate_count_new == 0:
+                #     cursor.execute('DELETE FROM links_for_sosts WHERE link_text = ?', (message.text,))
+                #     connection.commit()
+                #     connection.close()
+                # else:
+                #     cursor.execute('UPDATE links_for_sosts SET activate_count = ? WHERE link_text = ?', (activate_count_new, message.text))
+                #     connection.commit()
+                #     connection.close()
                 return {
                     "status": "success",
                     "message": "Код действителен",
@@ -282,7 +335,91 @@ async def submit_form(request: Request):
         
         # Отправка уведомления в Telegram (если нужно)
         try:
+            connection = sqlite3.connect(main_path, check_same_thread=False)
+            cursor = connection.cursor()
+
             if form_data.telegram_id:
+                # Добавляем в основной клан
+                cursor.execute(
+                    f'INSERT INTO [{-chats_names["klan"]}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    (form_data.telegram_id, form_data.user, form_data.name, form_data.age, form_data.nick, form_data.gameId, form_data.nick, 0, '', datetime.now().strftime('%H:%M:%S %d.%m.%Y'))
+                )
+                connection.commit()
+            
+                # Добавляем в общую таблицу пользователей
+                try:
+                    cursor.execute('INSERT INTO all_users (user_id, username) VALUES (?, ?)', (form_data.telegram_id, form_data.user))
+                    connection.commit()
+                except sqlite3.IntegrityError:
+                    connection.commit()
+                    cursor.execute('UPDATE all_users SET username = ? WHERE user_id = ?', (form_data.user, form_data.telegram_id))
+                    connection.commit()
+
+                # Добавляем в состав в зависимости от sost
+                if form_data.sost == 1:
+                    try:
+                        cursor.execute(
+                            f'INSERT INTO [{-chats_names["sost-1"]}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                            (form_data.telegram_id, form_data.user, form_data.name, form_data.age, form_data.nick, form_data.gameId, form_data.nick, 0, '', datetime.now().strftime('%H:%M:%S %d.%m.%Y'))
+                        )
+                    except Exception:
+                        pass
+                    connection.commit()
+
+                elif form_data.sost == 2:
+                    try:
+                        cursor.execute(
+                            f'INSERT INTO [{-chats_names["sost-2"]}] (tg_id, username, name, age, nik_pubg, id_pubg, nik, rang, last_date, date_vhod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                            (form_data.telegram_id, form_data.user, form_data.name, form_data.age, form_data.nick, form_data.gameId, form_data.nick, 0, '', datetime.now().strftime('%H:%M:%S %d.%m.%Y'))
+                        )
+                    except Exception:
+                        pass
+                    connection.commit()
+
+                # Отправляем логи
+                await prinatie_bot.send_message(
+                    logs_gr,  # logs_gr заменил на конкретный ID
+                    f'<a href="https://t.me/{form_data.user}">Пользователь</a> вошел в клан и {form_data.sost} состав\n\nЕго описание: \nИмя: {form_data.name}\nВозраст: {form_data.age}\nАйди: {form_data.gameId}\nНик: {form_data.nick}',
+                    parse_mode='html'
+                )
+
+                # Добавляем в черный список
+                try:
+                    cursor.execute('INSERT INTO black_list (user_id, rison) VALUES (?, ?)', (form_data.telegram_id, ''))
+                except Exception:
+                    pass
+
+                # Отправляем инструкции
+                import asyncio
+                await asyncio.sleep(0.5)
+                
+                # Получаем правила из базы
+                try:
+                    cursor.execute('SELECT text FROM texts WHERE text_name = ?', ('pravils',))
+                    pravils_text = cursor.fetchone()
+                    if pravils_text:
+                        await prinatie_bot.send_message(
+                            form_data.telegram_id,
+                            f"!!Ознакомься!!\n\n{pravils_text[0]}"
+                        )
+                except Exception:
+                    pass
+                
+                await gaid(form_data.telegram_id)
+                await asyncio.sleep(0.5)
+                
+                # Отправляем фото с инструкцией
+                try:
+                    from aiogram.types.input_file import FSInputFile
+                    await prinatie_bot.send_photo(
+                        chat_id=form_data.telegram_id,
+                        photo=FSInputFile(f'{curent_path}/photos/is_klan.jpg'),
+                        caption="После того как ты ознакомился с информацией выше, кинь скрин того как ты кинул в клан"
+                    )
+                except Exception:
+                    pass
+
+                # Основное уведомление
                 await prinatie_bot.send_message(
                     form_data.telegram_id,
                     f"✅ Ваша заявка в клан принята!\n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n⏳ Ожидайте рассмотрения."
