@@ -33,7 +33,10 @@ async def farm(message: Message):
         meshok_old = 0
     try:
         cursor.execute(f"SELECT last_date FROM farma WHERE user_id = ?", (user_id,))
-        lst = datetime.strptime(cursor.fetchall()[0][0], "%H:%M:%S %d.%m.%Y")
+        date_result = cursor.fetchall()
+        if not date_result:
+            return
+        lst = datetime.strptime(date_result[0][0], "%H:%M:%S %d.%m.%Y")
         now = datetime.now()
         delta = now - lst
         print(delta)
@@ -143,7 +146,11 @@ async def perevod_start(message: Message):
     if meshok_self <100:
         await message.answer('Твой мешок пустой! Иди работай а потом переводи')
         return
-    meshok_user = cursor.execute(f"SELECT meshok FROM farma WHERE user_id = ?", (user_id,)).fetchall()[0][0]
+    try:
+        meshok_user = cursor.execute(f"SELECT meshok FROM farma WHERE user_id = ?", (user_id,)).fetchall()[0][0]
+    except IndexError:
+        await message.answer('Не удалось найти информацию о мешке получателя')
+        return
 
     perev = 100
 
@@ -466,16 +473,28 @@ async def perev_confirm(call: CallbackQuery):
     connection = sqlite3.connect(main_path, check_same_thread=False)
     cursor = connection.cursor()
 
-    user_id = cursor.execute('SELECT user_id FROM perevod WHERE self_id = ? AND mess_id = ?', (call.from_user.id, call.message.message_id)).fetchall()[0][0]
+    result = cursor.execute('SELECT user_id FROM perevod WHERE self_id = ? AND mess_id = ?', (call.from_user.id, call.message.message_id)).fetchall()
+    if not result:
+        await call.message.answer('Запись о переводе не найдена. Попробуйте начать заново.')
+        return
+    user_id = result[0][0]
     self_id = call.from_user.id
     try:
         meshok_self = cursor.execute(f"SELECT meshok FROM farma WHERE user_id = ?", (self_id,)).fetchall()[0][0]
     except IndexError:
         await call.message.answer('Твой мешок пустой! Иди работай а потом переводи')
         return
-    meshok_user = cursor.execute(f"SELECT meshok FROM farma WHERE user_id = ?", (user_id,)).fetchall()[0][0]
+    try:
+        meshok_user = cursor.execute(f"SELECT meshok FROM farma WHERE user_id = ?", (user_id,)).fetchall()[0][0]
+    except IndexError:
+        await call.message.answer('Не удалось найти информацию о мешке получателя')
+        return
 
-    perev = cursor.execute('SELECT stavka FROM perevod WHERE self_id = ? AND mess_id = ?',(call.from_user.id, call.message.message_id)).fetchall()[0][0]
+    stavka_result = cursor.execute('SELECT stavka FROM perevod WHERE self_id = ? AND mess_id = ?',(call.from_user.id, call.message.message_id)).fetchall()
+    if not stavka_result:
+        await call.message.answer('Запись о сумме перевода не найдена. Попробуйте начать заново.')
+        return
+    perev = stavka_result[0][0]
 
 
     cursor.execute('UPDATE farma SET meshok = ? WHERE user_id = ?', (meshok_user+perev, user_id))
