@@ -627,9 +627,13 @@
                 </button>
             `;
             
-            // Заменяем основной контент
+            // Заменяем основной контент, но сохраняем заголовок
             const mainContent = document.querySelector('.main-content');
+            const title = mainContent.querySelector('.neon-title');
             mainContent.innerHTML = '';
+            if (title) {
+                mainContent.appendChild(title);
+            }
             mainContent.appendChild(rulesContainer);
         }
 
@@ -661,7 +665,11 @@
             `;
             
             const mainContent = document.querySelector('.main-content');
+            const title = mainContent.querySelector('.neon-title');
             mainContent.innerHTML = '';
+            if (title) {
+                mainContent.appendChild(title);
+            }
             mainContent.appendChild(guideContainer);
         }
 
@@ -739,24 +747,12 @@
                 body: JSON.stringify(formData)
             });
             
-            // Сразу показываем уведомление
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
-            }
+            
 
-            tg.showPopup({
-                title: 'Заявка отправлена!',
-                message: 'Закройте MiniApp и посмотрите инструкции от бота',
-                buttons: [{
-                    text: 'Отлично!',
-                    type: 'default'
-                }]
-            }).then(() => {
-                // Показываем правила и гайд
-                showRulesAndGuide();
-            });
-            window.location.reload();
-            tg.close();
+
+            
+            showRulesAndGuide();
+
         }
 
         // Добавляем обработчики для real-time валидации
