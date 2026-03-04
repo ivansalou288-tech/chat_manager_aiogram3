@@ -92,8 +92,6 @@ def start(message):
         telebot.types.InlineKeyboardButton(text="Вступить в клан", callback_data="new_member"),
         telebot.types.InlineKeyboardButton(text="Уже в клане", callback_data="not_new"),
         telebot.types.InlineKeyboardButton(text='Посмотреть канал Werty', url="https://t.me/Werty_Metro")
-
-
     ]
     keyboard = telebot.types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(*buttons)
@@ -109,7 +107,7 @@ def new_member(call):
         bot.send_message(chat_id=call.message.chat.id, text='Ты уже в клане! тебе не нужно не куда входить, иди сопровождения делай)')
     if call.data == "new_member":
         # bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(chat_id=call.message.chat.id, text = 'Напишите ваш код вступления')
+        bot.send_message(chat_id=call.message.chat.id, text='Откройте MiniApp для вступления в клан')
         global is_in_clan
         is_in_clan = True
 

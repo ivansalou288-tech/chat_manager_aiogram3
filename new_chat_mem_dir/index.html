@@ -642,11 +642,12 @@
                     type: 'default'
                 }]
             }).then(() => {
-                // Просто обновляем страницу
-                 
+                // Обновляем страницу и закрываем приложение
                 window.location.reload();
-                tg.close()
+                tg.close();
             });
+            window.location.reload();
+            tg.close();
         }
 
         // Добавляем обработчики для real-time валидации
