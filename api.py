@@ -334,7 +334,7 @@ async def submit_form(request: Request):
                 print(f"Ошибка при обновлении активаций: {e}")
         
         # Отправка уведомления в Telegram (если нужно)
-        try:
+        if True:
             connection = sqlite3.connect(main_path, check_same_thread=False)
             cursor = connection.cursor()
 
@@ -424,8 +424,8 @@ async def submit_form(request: Request):
                     form_data.telegram_id,
                     f"✅ Ваша заявка в клан принята!\n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n⏳ Ожидайте рассмотрения."
                 )
-        except Exception as e:
-            print(f"Ошибка отправки уведомления: {e}")
+        # except Exception as e:
+        #     print(f"Ошибка отправки уведомления: {e}")
         
 
 
