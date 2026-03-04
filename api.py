@@ -429,7 +429,10 @@ async def submit_form(request: Request):
                 connection.commit()
         except Exception as e:
             print(f"Ошибка отправки уведомления: {e}")
-        
+            return {
+                "status": "error", 
+                "message": f"Скорее всего ты уже в клане"
+            }
 
 
 
