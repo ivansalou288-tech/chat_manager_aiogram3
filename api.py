@@ -20,6 +20,8 @@ import main.secret
 TOKEN = main.secret.main_token
 
 bot = Bot(token=TOKEN)
+admin_bot = Bot(token=main.secret.admin_token)
+prinatie_bot = Bot(token=main.secret.prinatie_token)
 class RecomRemoveAction(BaseModel):
     rec_id: str
     user_id: Optional[int] = None
@@ -88,6 +90,8 @@ class FormData(BaseModel):
     age: int
     nick: str
     gameId: str
+    invite_code: Optional[str] = None
+    sost: Optional[int] = None
 
 chats_names = {'klan': 1002143434937, 'sost-1': 1002274082016, 'sost-2': 1002439682589}
 
@@ -161,6 +165,69 @@ app.add_middleware(
 #     except FileNotFoundError:
 #         return HTMLResponse("<h1>Файл не найден</h1>", status_code=404)
 
+class CodeCheckRequest(BaseModel):
+    code: str
+
+@app.post("/check_invite_code")
+async def check_invite_code(request: Request):
+    """
+    Проверяет код приглашения в базе данных
+    """
+    try:
+        # Получаем тело запроса
+        body = await request.body()
+        raw_data = body.decode('utf-8')
+        print(f"Проверка кода: {raw_data}")
+        
+        # Парсим JSON
+        import json
+        data = json.loads(raw_data)
+        code = data.get('code', '').strip()
+        
+        if not code:
+            return {
+                "status": "error",
+                "message": "Код не указан"
+            }
+        
+        # Проверяем код в базе данных
+        connection = sqlite3.connect(datahelp_path, check_same_thread=False)
+        cursor = connection.cursor()
+        
+        cursor.execute('SELECT link_text, activate_count, sost FROM links_for_sosts WHERE link_text = ?', (code,))
+        result = cursor.fetchone()
+        connection.close()
+        
+        if result:
+            link_text, activate_count, sost = result
+            if activate_count > 0:
+                return {
+                    "status": "success",
+                    "message": "Код действителен",
+                    "data": {
+                        "link": link_text,
+                        "activate_count": activate_count,
+                        "sost": sost
+                    }
+                }
+            else:
+                return {
+                    "status": "error",
+                    "message": "Код исчерпал лимит активаций"
+                }
+        else:
+            return {
+                "status": "error",
+                "message": "Код не найден"
+            }
+            
+    except Exception as e:
+        print(f"Ошибка при проверке кода: {e}")
+        return {
+            "status": "error",
+            "message": f"Ошибка проверки: {str(e)}"
+        }
+
 @app.post("/submit_form")
 async def submit_form(request: Request):
     """
@@ -188,18 +255,26 @@ async def submit_form(request: Request):
         print(f"Возраст: {form_data.age}")
         print(f"Игровой ник: {form_data.nick}")
         print(f"Игровой ID: {form_data.gameId}")
+        print(f"Код приглашения: {form_data.invite_code}")
+        print(f"Состав: {form_data.sost}")
         print(f"Время подачи: {datetime.now().strftime('%H:%M:%S %d.%m.%Y')}")
         print("=" * 50)
         
         # Отправка уведомления в Telegram (если нужно)
         try:
             if form_data.telegram_id:
-                await bot.send_message(
+                await prinatie_bot.send_message(
                     form_data.telegram_id,
                     f"✅ Ваша заявка в клан принята!\n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n⏳ Ожидайте рассмотрения."
                 )
         except Exception as e:
             print(f"Ошибка отправки уведомления: {e}")
+        
+
+
+
+
+
         
         # Возвращаем успешный ответ
         return {

@@ -333,7 +333,21 @@
     <div class="main-content">
         <h1 class="neon-title">Заявка в клан</h1>
         
-        <div class="form-container">
+        <!-- Форма ввода кода -->
+        <div class="form-container" id="codeContainer">
+            <div class="input-group">
+                <label class="neon-label" for="inputCode">Код приглашения:</label>
+                <input type="text" id="inputCode" class="neon-input" placeholder="Введите код приглашения">
+                <span class="error-message" id="codeError">Неверный код приглашения</span>
+            </div>
+            
+            <button class="neon-button" onclick="checkCode()">
+                Проверить код
+            </button>
+        </div>
+        
+        <!-- Форма заявки (изначально скрыта) -->
+        <div class="form-container" id="formContainer" style="display: none;">
             <div class="input-group">
                 <label class="neon-label" for="inputName">Ваше имя:</label>
                 <input type="text" id="inputName" class="neon-input" placeholder="Введите ваше реальное имя">
@@ -454,6 +468,93 @@
             }
         }
 
+        // Глобальные переменные для хранения данных о коде
+        let currentCodeData = null;
+
+        // Проверка кода приглашения
+        async function checkCode() {
+            const code = document.getElementById('inputCode').value.trim();
+            
+            if (!code) {
+                toggleError('inputCode', 'codeError', true);
+                return;
+            }
+            
+            // Вибрация для обратной связи
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+            
+            try {
+                const response = await fetch('/check_invite_code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: code })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Код найден, сохраняем данные и показываем форму
+                    currentCodeData = data.data;
+                    toggleError('inputCode', 'codeError', false);
+                    
+                    // Показываем форму заявки, скрываем форму кода
+                    document.getElementById('codeContainer').style.display = 'none';
+                    document.getElementById('formContainer').style.display = 'block';
+                    
+                    // Вибрация успеха
+                    if (tg.HapticFeedback) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                    }
+                    
+                    tg.showPopup({
+                        title: 'Код принят!',
+                        message: `Код действителен. Осталось активаций: ${data.data.activate_count}`,
+                        buttons: [{
+                            text: 'Продолжить',
+                            type: 'default'
+                        }]
+                    });
+                } else {
+                    // Код не найден или недействителен
+                    toggleError('inputCode', 'codeError', true);
+                    
+                    // Вибрация ошибки
+                    if (tg.HapticFeedback) {
+                        tg.HapticFeedback.notificationOccurred('error');
+                    }
+                    
+                    tg.showPopup({
+                        title: 'Ошибка!',
+                        message: data.message || 'Неверный код приглашения',
+                        buttons: [{
+                            text: 'Понятно',
+                            type: 'default'
+                        }]
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка при проверке кода:', error);
+                toggleError('inputCode', 'codeError', true);
+                
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+                
+                tg.showPopup({
+                    title: 'Ошибка!',
+                    message: 'Не удалось проверить код. Попробуйте еще раз.',
+                    buttons: [{
+                        text: 'Понятно',
+                        type: 'default'
+                    }]
+                });
+            }
+        }
+
         // Обработчик нажатия на кнопку "Подать заявку"
         function handleFillButton() {
             // Вибрация для обратной связи
@@ -512,7 +613,9 @@
                 name: name,
                 age: parseInt(age),
                 nick: nick,
-                gameId: gameId
+                gameId: gameId,
+                invite_code: currentCodeData.link,
+                sost: currentCodeData.sost
             };
 
             console.log('Отправка заявки в клан:', formData);
@@ -567,6 +670,11 @@
         // Добавляем обработчики для real-time валидации
         document.addEventListener('DOMContentLoaded', function() {
             initUserData();
+            
+            // Валидация кода при вводе
+            document.getElementById('inputCode').addEventListener('input', function() {
+                toggleError('inputCode', 'codeError', false);
+            });
             
             // Валидация имени при вводе
             document.getElementById('inputName').addEventListener('input', function() {
