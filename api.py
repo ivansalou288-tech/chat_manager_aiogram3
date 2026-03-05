@@ -409,12 +409,12 @@ async def generate_invite_links(request: Request):
         
         # Генерируем ссылки в зависимости от состава
         if sostav == 1:
-            clan_link = bot.export_chat_invite_link(klan)
-            sost_link = bot.export_chat_invite_link(sost_1)
+            clan_link = await prinatie_bot.export_chat_invite_link(klan)
+            sost_link = await prinatie_bot.export_chat_invite_link(sost_1)
             chat_name = "Состав 1"
         elif sostav == 2:
-            clan_link = bot.export_chat_invite_link(klan)
-            sost_link = bot.export_chat_invite_link(sost_2)
+            clan_link = await prinatie_bot.export_chat_invite_link(klan)
+            sost_link = await prinatie_bot.export_chat_invite_link(sost_2)
             chat_name = "Состав 2"
         else:
             return {
