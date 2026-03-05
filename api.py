@@ -412,17 +412,7 @@ async def generate_invite_links(request: Request):
             clan_link = await prinatie_bot.export_chat_invite_link(klan)
             sost_link = await prinatie_bot.export_chat_invite_link(sost_1)
             chat_name = "Состав 1"
-        elif sostav == 2:
-            clan_link = await prinatie_bot.export_chat_invite_link(klan)
-            sost_link = await prinatie_bot.export_chat_invite_link(sost_2)
-            chat_name = "Состав 2"
-        else:
             return {
-                "status": "error",
-                "message": "Неизвестный состав"
-            }
-        
-        return {
             "status": "success",
             "data": {
                 "clan": {
@@ -432,11 +422,37 @@ async def generate_invite_links(request: Request):
                 },
                 "sostav": {
                     "name": chat_name,
-                    "avatar": "/photos/sost_ava.jpg",
+                    "avatar": "/photos/sost-1.jpg",
                     "link": sost_link
                 }
             }
         }
+        elif sostav == 2:
+            clan_link = await prinatie_bot.export_chat_invite_link(klan)
+            sost_link = await prinatie_bot.export_chat_invite_link(sost_2)
+            chat_name = "Состав 2"
+            return {
+            "status": "success",
+            "data": {
+                "clan": {
+                    "name": "Клан Werty",
+                    "avatar": "/photos/klan_ava.jpg",
+                    "link": clan_link
+                },
+                "sostav": {
+                    "name": chat_name,
+                    "avatar": "/photos/sost-2.jpg",
+                    "link": sost_link
+                }
+            }
+        }
+        
+        else:
+            return {
+                "status": "error",
+                "message": "Неизвестный состав"
+            }
+        
         
     except Exception as e:
         print(f"Ошибка при генерации ссылок: {e}")
