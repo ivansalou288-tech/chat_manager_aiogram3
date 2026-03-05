@@ -331,31 +331,31 @@ async def upload_photo(request: Request):
             }
         
         # Сохраняем фото
-        photo_filename = f"screen_{telegram_id}_{int(time.time())}.jpg"
+        # photo_filename = f"screen_{telegram_id}_{int(time.time())}.jpg"
         
-        # Используем абсолютный путь
-        import os
-        screenshots_dir = os.path.join(os.path.dirname(__file__), "screenshots")
-        os.makedirs(screenshots_dir, exist_ok=True)
-        photo_path = os.path.join(screenshots_dir, photo_filename)
+        # # Используем абсолютный путь
+        # import os
+        # screenshots_dir = os.path.join(os.path.dirname(__file__), "screenshots")
+        # os.makedirs(screenshots_dir, exist_ok=True)
+        # photo_path = os.path.join(screenshots_dir, photo_filename)
         
-        print(f"Путь для сохранения: {photo_path}")
+        # print(f"Путь для сохранения: {photo_path}")
         
-        # Сохраняем файл
-        with open(photo_path, "wb") as buffer:
-            content = await photo.read()
-            buffer.write(content)
+        # # Сохраняем файл
+        # with open(photo_path, "wb") as buffer:
+        #     content = await photo.read()
+        #     buffer.write(content)
         
-        print(f"Получен скриншот от пользователя {telegram_id} (@{username}): {photo_filename}")
-        print(f"Размер файла: {os.path.getsize(photo_path)} байт")
+        # print(f"Получен скриншот от пользователя {telegram_id} (@{username}): {photo_filename}")
+        # print(f"Размер файла: {os.path.getsize(photo_path)} байт")
         
         # Здесь можно добавить логику для отправки фото в Telegram или сохранения в БД
-        
+        await asyncio.sleep(3)
         return {
             "status": "success",
             "message": "Скриншот успешно загружен",
             "data": {
-                "filename": photo_filename,
+                "filename": 'name',
                 "telegram_id": telegram_id,
                 "username": username
             }
@@ -368,6 +368,82 @@ async def upload_photo(request: Request):
         return {
             "status": "error",
             "message": f"Ошибка загрузки: {str(e)}"
+        }
+
+@app.post("/generate_invite_links")
+async def generate_invite_links(request: Request):
+    """
+    Генерирует ссылки-приглашения в чаты для пользователя
+    """
+    try:
+        # Получаем тело запроса
+        body = await request.body()
+        raw_data = body.decode('utf-8')
+        data = json.loads(raw_data)
+        
+        telegram_id = data.get('telegram_id')
+        username = data.get('username')
+        
+        if not telegram_id:
+            return {
+                "status": "error",
+                "message": "Telegram ID не указан"
+            }
+        
+        # Проверяем есть ли пользователь в таблице is_to_klan
+        connection = sqlite3.connect(dinamik_path, check_same_thread=False)
+        cursor = connection.cursor()
+        
+        cursor.execute('SELECT sostav FROM is_to_klan WHERE user_id = ?', (telegram_id,))
+        result = cursor.fetchone()
+        connection.close()
+        
+        if not result:
+            return {
+                "status": "error", 
+                "message": "Сначала подайте заявку в клан"
+            }
+        
+        sostav = result[0]
+        
+        # Генерируем ссылки в зависимости от состава
+        if sostav == 1:
+            clan_link = bot.export_chat_invite_link(klan)
+            sost_link = bot.export_chat_invite_link(sost_1)
+            chat_name = "Состав 1"
+        elif sostav == 2:
+            clan_link = bot.export_chat_invite_link(klan)
+            sost_link = bot.export_chat_invite_link(sost_2)
+            chat_name = "Состав 2"
+        else:
+            return {
+                "status": "error",
+                "message": "Неизвестный состав"
+            }
+        
+        return {
+            "status": "success",
+            "data": {
+                "clan": {
+                    "name": "Клан Werty",
+                    "avatar": "/photos/klan_ava.jpg",
+                    "link": clan_link
+                },
+                "sostav": {
+                    "name": chat_name,
+                    "avatar": "/photos/sost_ava.jpg",
+                    "link": sost_link
+                }
+            }
+        }
+        
+    except Exception as e:
+        print(f"Ошибка при генерации ссылок: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": f"Ошибка генерации: {str(e)}"
         }
 
 @app.post("/submit_form")
