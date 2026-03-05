@@ -591,24 +591,14 @@ async def submit_form(request: Request):
                 await asyncio.sleep(0.5)
                 
                 # Отправляем фото с инструкцией
-                try:
-                    from aiogram.types import InputMediaPhoto
-                    await prinatie_bot.send_photo(
-                        chat_id=form_data.telegram_id,
-                        photo=InputMediaPhoto(media=f'{curent_path}/photos/is_klan.jpg', caption="После того как ты ознакомился с информацией выше, кинь скрин того как ты кинул в клан")
-                    )
-                except Exception:
-                    pass
+
 
                 # Основное уведомление
                 await prinatie_bot.send_message(
                     form_data.telegram_id,
-                    f"✅ Твое описание! \n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}\n\n Для получения ссылок на группы в телеграме пришли скриншот что ты кинул запрос в клан"
+                    f"✅ Твое описание! \n\n📋 Данные:\n• Имя: {form_data.name}\n• Возраст: {form_data.age}\n• Игровой ник: {form_data.nick}\n• Игровой ID: {form_data.gameId}"
                 )
-                connection = sqlite3.connect(dinamik_path, check_same_thread=False)
-                cursor = connection.cursor()
-                cursor.execute('INSERT INTO is_to_klan (user_id, sostav) VALUES (?, ?)', (form_data.telegram_id, form_data.sost))
-                connection.commit()
+
         except Exception as e:
             print(f"Ошибка отправки уведомления: {e}")
             return {
