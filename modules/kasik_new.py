@@ -8,7 +8,7 @@ from aiogram import Router, types, F
 import asyncio
 import sqlite3
 
-from main.config3 import *
+from main.config31 import *
 from path import Path
 
 # Create router for message and callback handlers

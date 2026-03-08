@@ -5,6 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from datetime import datetime, timedelta
 from aiogram.types import ChatPermissions
 from aiogram import Bot, Dispatcher, types
+from main import *                       
 import asyncio
 #?from config import *
 import sqlite3
@@ -131,191 +132,8 @@ page_c = 0
 
 def get_db_path(chat_id):
     db_path = curent_path / 'databases' / f'{-(chat_id)}.db'
+    print(db_path)
     return db_path
-
-def init_chat_db(chat_id):
-    """Initialize database for a specific chat with the structure from test.sql"""
-    db_path = get_db_path(chat_id)
-    connection = sqlite3.connect(db_path)
-    cursor = connection.cursor()
-    
-    # Create tables based on test.sql structure
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            tg_id INTEGER UNIQUE NOT NULL,
-            username TEXT,
-            name TEXT NOT NULL,
-            age INTEGER NOT NULL,
-            nik_pubg TEXT NOT NULL,
-            id_pubg INTEGER NOT NULL,
-            nik TEXT,
-            rang INTEGER NOT NULL DEFAULT 0,
-            last_date TEXT,
-            date_vhod TEXT DEFAULT 'Неизвестно',
-            mess_count INTEGER DEFAULT 0
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS bans (
-            tg_id INTEGER UNIQUE NOT NULL,
-            id_pubg INTEGER NOT NULL UNIQUE,
-            message_id INTEGER,
-            prichina TEXT,
-            date TEXT,
-            user_men TEXT,
-            moder_men TEXT
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS black_list (
-            user_id INTEGER UNIQUE,
-            rison TEXT DEFAULT 'неизвестна'
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS bookmarks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            chat_id INTEGER NOT NULL,
-            message_id INTEGER NOT NULL,
-            message_text TEXT,
-            author_id INTEGER,
-            author_name TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (user_id, chat_id, message_id)
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS default_periods (
-            command TEXT,
-            period TEXT,
-            chat INTEGER,
-            PRIMARY KEY (command, chat)
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS dk (
-            comand TEXT PRIMARY KEY,
-            dk INTEGER
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS muts (
-            user_id INTEGER,
-            rang_moder INTEGER,
-            moder_id INTEGER,
-            moder_men TEXT,
-            date TEXT,
-            comments TEXT
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS perevod (
-            self_id INTEGER UNIQUE,
-            user_id INTEGER,
-            mess_id INTEGER,
-            stavka TEXT
-        )
-    ''')
-    
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS texts (
-            text_name TEXT PRIMARY KEY,
-            text TEXT
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS recommendation (
-            user_id INTEGER,
-            pubg_id INTEGER,
-            moder TEXT,
-            comments TEXT,
-            rang INTEGER,
-            date TEXT,
-            recom_id INTEGER
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS warns (
-            user_id INTEGER PRIMARY KEY UNIQUE NOT NULL,
-            reason TEXT,
-            moder_id INTEGER,
-            date TEXT
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS warn_snat (
-            user_id INTEGER,
-            warn_text TEXT,
-            moder_give TEXT,
-            moder_snat TEXT
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS links (
-            link_text TEXT,
-            activate_count INTEGER,
-            sost INTEGER
-        )
-    ''')
-    
-
-    
-
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS ruletka (
-            user_id INTEGER PRIMARY KEY,
-            last_date TEXT
-        )
-    ''')
-    
-    # Insert default command permissions if not exists
-    default_commands = [
-        ('ban', 3),
-        ('mut', 2),
-        ('warn', 2),
-        ('all', 3),
-        ('rang', 4),
-        ('dk', 4),
-        ('change_pravils', 4),
-        ('close_chat', 4),
-        ('change_priv', 4), 
-        ('obavlenie', 4),
-        ('tur', 1),
-        ('dell', 1),
-        ('period', 4)
-
-    ]
-    texts = [
-        ('priv', 'Добро пожаловать!'),
-        ('rules', '')
-    ]
-    default_periods = [
-        ('mut', "1 час", -1003012971064),
-        ('all', "3 минуты", -1003012971064),
-        ('kasik', "5 минут", -1003012971064)
-    ]
-    for command, dk_value in default_commands:
-        cursor.execute('INSERT OR IGNORE INTO dk (comand, dk) VALUES (?, ?)', (command, dk_value))
-    
-    for text_name, txt in texts:
-        cursor.execute('INSERT OR IGNORE INTO texts (text_name, text) VALUES (?, ?)', (text_name, txt))
-
-    connection.commit()
-    connection.close()
 
 
 #? EN: Class to extract user information from a message (reply, mention, or ID)
@@ -336,8 +154,6 @@ class GetUserByMessage:
         self.date_vhod = self.getDateVhodByID(self.user_id, self.chat_id)
 
     def getUserId(self, message):
-        # Initialize database for this chat if it doesn't exist
-        
         connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
 
@@ -383,9 +199,7 @@ class GetUserByMessage:
             return 'Отсутвует'
 
     def getNameByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-       
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
             name = cursor.execute(f"SELECT name FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
@@ -394,9 +208,7 @@ class GetUserByMessage:
             return 'Отсутвует'
 
     def getPubgidByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-       
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
             pubg_id = cursor.execute(f"SELECT id_pubg FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
@@ -405,9 +217,7 @@ class GetUserByMessage:
             return 'Отсутвует'
 
     def getPubgNikByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-        init_chat_db(chat_id)
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
             pubg_nik = cursor.execute(f"SELECT nik_pubg FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
@@ -415,22 +225,18 @@ class GetUserByMessage:
         except IndexError:
             return 'Отсутвует'
     def getNikByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-        
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            nik = cursor.execute(f"SELECT nik FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
+            nik = cursor.execute(f"SELECT nik FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
             return nik
         except IndexError:
-            return 'Отсутвут'
+            return 'Отсутвует'
 
 
 
     def getRangByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-       
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
             rang = cursor.execute(f"SELECT rang FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
@@ -439,23 +245,19 @@ class GetUserByMessage:
             return 'Отсутвует'
 
     def getLastDateByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-        
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            last_date = cursor.execute(f"SELECT last_date FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
+            last_date = cursor.execute(f"SELECT last_date FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
             return last_date
         except IndexError:
             return 'Отсутвует'
 
     def getDateVhodByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-    
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            date_vhod = cursor.execute(f"SELECT date_vhod FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
+            date_vhod = cursor.execute(f"SELECT date_vhod FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
             return date_vhod
         except IndexError:
             return 'Отсутвует'
@@ -487,84 +289,68 @@ class GetUserByID:
             return 'Пользователь'
 
     def getNameByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-        
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            name = cursor.execute(f"SELECT name FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
+            name = cursor.execute(f"SELECT name FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
             return name
         except IndexError:
             return 'Пользователь'
 
     def getPubgidByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-     
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            pubg_id = int(cursor.execute(f"SELECT id_pubg FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0])
+            pubg_id = int(cursor.execute(f"SELECT id_pubg FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0])
             return pubg_id
         except IndexError:
             return 'Отсутвует'
 
     def getPubgNikByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-       
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            pubg_nik = cursor.execute(f"SELECT nik_pubg FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
+            pubg_nik = cursor.execute(f"SELECT nik_pubg FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
             return pubg_nik
         except IndexError:
             return 'Пользователь'
 
     def getRangByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-     
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            rang = cursor.execute(f"SELECT rang FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
+            rang = cursor.execute(f"SELECT rang FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
             return rang
         except IndexError:
             return 'Обычный участник'
 
     def getLastDateByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-      
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            last_date = cursor.execute(f"SELECT last_date FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
+            last_date = cursor.execute(f"SELECT last_date FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
             return last_date
         except IndexError:
             return 'Отсутвует'
     def getNikByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-        
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            nik = cursor.execute(f"SELECT nik FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
+            nik = cursor.execute(f"SELECT nik FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
             return nik
         except IndexError:
             return 'Отсутвует'
 
     def getDateVhodByID(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
-      
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
-            date_vhod = cursor.execute(f"SELECT date_vhod FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
+            date_vhod = cursor.execute(f"SELECT date_vhod FROM users WHERE tg_id=?", (self.user_id,)).fetchall()[0][0]
             return date_vhod
         except IndexError:
             return 'Отсутвует'
     def getUserMention(self, user_id, chat_id):
-        # Initialize database for this chat if it doesn't exist
- 
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+        connection = sqlite3.connect(get_db_path(self.chat_id), check_same_thread=False)
         cursor = connection.cursor()
         try:
             name = cursor.execute(f"SELECT nik FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
@@ -747,18 +533,10 @@ async def about_user_sdk(user_id, chat_id):
 #? EN: Retrieves chat rules from database
 #* RU: Получает правила чата из базы данных
 async def pravila_sdk(message):
-    # Initialize database for this chat if it doesn't exist
-   
-    connection = sqlite3.connect(get_db_path(message.chat.id), check_same_thread=False)
+    connection = sqlite3.connect(main_path, check_same_thread=False)
     cursor = connection.cursor()
-    try:
-        rules = cursor.execute(f'SELECT text FROM texts WHERE text_name=?', ('rules',)).fetchall()[0][0]
-        text = f"{desk_em} <b>Правила чата</b>\n\n{rules if rules and rules!=None and rules!='None' else 'Правила не установлены'}"
-        return text
-    except IndexError:
-        return f"{desk_em} <b>Правила чата</b>\n\nПравила не установлены"
-    finally:
-        connection.close()
+    text = f"🗓<b>Правила чата</b>\n\n{cursor.execute(f'SELECT text FROM pravils WHERE chat_id=?', (message.chat.id,)).fetchall()[0][0]}"
+    return text
 
 #? EN: Extracts user ID from message, defaults to sender if not found
 #* RU: Извлекает ID пользователя из сообщения, по умолчанию возвращает отправителя
@@ -816,9 +594,7 @@ async def snat_warn(user_id, number_warn, warn_count_new, message):
         warn_index = number_warn - 1
         if warn_index < len(all_warns):
             warn_to_delete = all_warns[warn_index]
-            # Delete by user_id and reason to identify the specific warning
-            cursor.execute("DELETE FROM warns WHERE user_id = ? AND reason = ? AND moder_id = ? AND date = ?", 
-                        (user_id, warn_to_delete[1], warn_to_delete[2], warn_to_delete[3]))
+            cursor.execute("DELETE FROM warns WHERE id = ?", (warn_to_delete[0],))
             connection.commit()
             
         # Записываем в историю снятых предупреждений
@@ -896,35 +672,12 @@ async def give_warn(message, comments, user_id, is_first):
 
 #? EN: Inserts banned user information into database
 #* RU: Вставляет информацию о забаненном пользователе в базу данных
-async def insert_ban_user(user_id, user_men, moder_men, comments, message_id, chat_id, connection=None):
-    if connection is None:
-        # Create new connection only if not provided
-        chat_db_path = get_db_path(chat_id)
-        connection = sqlite3.connect(chat_db_path, check_same_thread=False)
-        cursor = connection.cursor()
-        close_connection = True
-    else:
-        # Use provided connection (from ban_user transaction)
-        cursor = connection.cursor()
-        close_connection = False
-    
-    # Check if bans table exists, create it if not
-    cursor.execute('''SELECT name FROM sqlite_master WHERE type='table' AND name='bans' ''')
-    if not cursor.fetchone():
-        # Create bans table
-        cursor.execute('''CREATE TABLE bans (
-            tg_id INTEGER UNIQUE NOT NULL,
-            id_pubg INTEGER NOT NULL UNIQUE,
-            message_id INTEGER,
-            prichina TEXT,
-            date TEXT,
-            user_men TEXT,
-            moder_men TEXT
-        )''')
-        connection.commit()
-    
+async def insert_ban_user(user_id, user_men, moder_men, comments, message_id, chat_id):
+    chat_db_path = get_db_path(chat_id)
+    connection = sqlite3.connect(chat_db_path, check_same_thread=False)
+    cursor = connection.cursor()
     try:
-        id_pubg = cursor.execute(f"SELECT id_pubg FROM users WHERE tg_id = ?", (user_id,)).fetchall()[0][0]
+        id_pubg = cursor.execute(f"SELECT id_pubg FROM users WHERE tg_id=?", (user_id,)).fetchall()[0][0]
     except IndexError:
         id_pubg = 'неизвестен'
     date = datetime.now().strftime('%H:%M:%S %d.%m.%Y')
@@ -940,30 +693,13 @@ async def insert_ban_user(user_id, user_men, moder_men, comments, message_id, ch
         connection.commit()
     except sqlite3.OperationalError:
         pass
-    
-    if close_connection:
-        connection.close()
+    connection.close()
 
 #? EN: Mutes user for specified time period with given reason
 #* RU: Мутит пользователя на указанный период времени с указанной причиной
 async def mute_user(user_id, chat_id, muteint, mutetype, message, comments, bot: Bot):
     connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
     cursor = connection.cursor()
-    
-    # Check if muts table exists, create it if not
-    cursor.execute('''SELECT name FROM sqlite_master WHERE type='table' AND name='muts' ''')
-    if not cursor.fetchone():
-        # Create muts table
-        cursor.execute('''CREATE TABLE muts (
-            user_id INTEGER,
-            rang_moder INTEGER,
-            moder_id INTEGER,
-            moder_men TEXT,
-            date TEXT,
-            comments TEXT
-        )''')
-        connection.commit()
-    
     print(mutetype, muteint)
     try:
         if mutetype == "ч" or mutetype == "часов" or mutetype == "час" or mutetype == "часа":
@@ -979,10 +715,8 @@ async def mute_user(user_id, chat_id, muteint, mutetype, message, comments, bot:
             dt = datetime.now() + timedelta(hours=int(muteint))
             timestamp = dt.timestamp()
         else:
-            connection.close()
             return False
     except IndexError:
-        connection.close()
         return False
     date = dt.strftime('%H:%M:%S %d.%m.%Y')
     try:
@@ -995,7 +729,6 @@ async def mute_user(user_id, chat_id, muteint, mutetype, message, comments, bot:
 
             rang_f_moder = cursor.execute(f'SELECT rang_moder FROM muts WHERE user_id=?', (user_id,)).fetchall()[0][0]
             if rang_f_moder > rang_moder:
-                connection.close()
                 rangs_name = ('Обычный участник', 'Младший Модератор', 'Модератор', 'Старший Модератор', 'Заместитель',
                               'Менеджер',
                               'Владелец')
@@ -1009,17 +742,11 @@ async def mute_user(user_id, chat_id, muteint, mutetype, message, comments, bot:
                 (user_id, rang_moder, moder_id, moder_men, date, comments))
 
         connection.commit()
-        connection.close()
         return True
     except TelegramBadRequest:
         await message.reply(
             f'👨🏻‍🔧 <a href="tg://user?id={user_id}">Пользователь</a> является Телеграм-админом этого чата',
             parse_mode='html')
-        connection.close()
-        return False
-    except Exception as e:
-        print(f"Error in mute_user: {e}")
-        connection.close()
         return False
 
 #? EN: Unmutes user and removes mute record from database
@@ -1030,13 +757,11 @@ async def unmute_user(user_id, chat_id, message, bot: Bot):
     try:
         rang_f_moder = cursor.execute(f'SELECT rang_moder FROM muts WHERE user_id = ?', (user_id,)).fetchall()[0][0]
     except IndexError:
-        connection.close()
         text = '🗓 Пользователь не лишён свободы слова'
         return text
     moder_id = message.from_user.id
     rang_moder = cursor.execute(f"SELECT rang FROM users WHERE tg_id=?", (moder_id,)).fetchall()[0][0]
     if rang_f_moder > rang_moder:
-        connection.close()
         rangs_name = ('Обычный участник', 'Младший Модератор', 'Модератор', 'Старший Модератор', 'Заместитель',
                       'Менеджер',
                       'Владелец')
@@ -1051,59 +776,41 @@ async def unmute_user(user_id, chat_id, message, bot: Bot):
                                                                can_add_web_page_previews=True, can_send_polls=True))
     cursor.execute(f'DELETE FROM muts WHERE user_id = ?', (user_id, ))
     connection.commit()
-    connection.close()
     return True
 
 #? EN: Bans user from chat and records ban information in database
 #* RU: Банит пользователя из чата и записывает информацию о бане в базу данных
 async def ban_user(user_id, chat_id, user_men, moder_men, comments, message_id, message, bot: Bot):
-    connection = None
+    connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+    cursor = connection.cursor()
+    
     try:
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False, timeout=10.0)
-        cursor = connection.cursor()
-        
-        # Start transaction
-        cursor.execute("BEGIN IMMEDIATE")
-        
         await bot.ban_chat_member(chat_id, user_id)
         
         cursor.execute('DELETE FROM warns WHERE user_id = ?', (user_id,))
         
-        await insert_ban_user(user_id, user_men, moder_men, comments, message_id, chat_id, connection)
+        await insert_ban_user(user_id, user_men, moder_men, comments, message_id, chat_id)
         
-        # Commit transaction
         connection.commit()
+        
         return True
         
-    except sqlite3.OperationalError as e:
-        if "database is locked" in str(e):
-            print(f"Database locked in ban_user: {e}")
-            return 'База данных занята, попробуйте еще раз через несколько секунд'
-        else:
-            print(f"OperationalError in ban_user: {e}")
-            return f'Ошибка базы данных при бане пользователя: {str(e)}'
-    except TelegramBadRequest as e:
-        print(f"TelegramBadRequest in ban_user: {e}")
+    except TelegramBadRequest:
         return f'👨🏻‍🔧 <a href="tg://user?id={user_id}">Пользователь</a> является Телеграм-админом этого чата'
     except Exception as e:
-        print(f"Unexpected error in ban_user: {e}")
+        print(f"Error in ban_user: {e}")
         return f'Произошла ошибка при бане пользователя: {str(e)}'
     finally:
-        if connection:
-            connection.close()
+        connection.close()
 
 #? EN: Unbans user from chat and removes ban record from database
 #* RU: Разбанивает пользователя в чате и удаляет запись о бане из базы данных
 async def unban_user(chat_id, user_id, bot: Bot):
-    connection = None
+    connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False)
+    cursor = connection.cursor()
+    
     try:
-        connection = sqlite3.connect(get_db_path(chat_id), check_same_thread=False, timeout=10.0)
-        cursor = connection.cursor()
-        
-        # Start transaction
-        cursor.execute("BEGIN IMMEDIATE")
-        
-        cursor.execute("SELECT * FROM bans WHERE tg_id = ?", (user_id,))
+        cursor.execute(f'SELECT * FROM bans WHERE tg_id = ?', (user_id,))
         ban_record = cursor.fetchall()
         
         if not ban_record:
@@ -1111,28 +818,19 @@ async def unban_user(chat_id, user_id, bot: Bot):
             
         await bot.unban_chat_member(chat_id, user_id)
         
-        cursor.execute('DELETE FROM bans WHERE tg_id = ?', (user_id,))
-        
-        # Commit transaction
+        cursor.execute(f'DELETE FROM bans WHERE tg_id = ?', (user_id,))
         connection.commit()
+        
         return True
         
-    except sqlite3.OperationalError as e:
-        if "database is locked" in str(e):
-            print(f"Database locked in unban_user: {e}")
-            return 'База данных занята, попробуйте еще раз через несколько секунд'
-        else:
-            print(f"OperationalError in unban_user: {e}")
-            return f'Ошибка базы данных при разбане: {str(e)}'
     except TelegramBadRequest as e:
         print(f"TelegramBadRequest in unban_user: {e}")
         return f'Ошибка при разбане: {str(e)}'
     except Exception as e:
-        print(f"Unexpected error in unban_user: {e}")
-        return f'Произошла ошибка при разбане: {str(e)}'
+        print(f"Error in unban_user: {e}")
+        return f'Произошла ошибка при разбане пользователя: {str(e)}'
     finally:
-        if connection:
-            connection.close()
+        connection.close()
 
 #? EN: Returns banned user back to chat
 #* RU: Возвращает забаненного пользователя обратно в чат

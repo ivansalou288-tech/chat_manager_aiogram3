@@ -9,7 +9,7 @@ from aiogram import types, F, Router, Bot
 
 from aiogram.types import ContentType
 
-from main.config3 import  *
+from main.config3 import get_db_path, init_chat_db, chats, mute_user, GetUserByID, all_path
 router = Router()
 
 #? EN: Chat command for playing Golden roulette: bets your farm coins, with a chance to lose the bet or double it.
@@ -27,11 +27,14 @@ async def golden_roulette(message: types.Message, bot:Bot):
     """
     Золотая рулетка:
     - работает по принципу русской рулетки (1 из 6 — поражение)
-    - играется на монетки из фармы (таблица farma в Base_bot.db)
+    - играется на монетки из фармы (таблица farma в per-chat базах данных)
     - при поражении ставка сгорает
     - при выживании игрок получает +100% к ставке (удваивает поставленную сумму)
     """
-    connection = sqlite3.connect(main_path, check_same_thread=False)
+    # Initialize database for this chat
+    init_chat_db(message.chat.id)
+    db_path = all_path
+    connection = sqlite3.connect(get_db_path(message.chat.id), check_same_thread=False)
     cursor = connection.cursor()
     black_list=[]
     blk = cursor.execute('SELECT user_id FROM black_list').fetchall()
@@ -40,7 +43,12 @@ async def golden_roulette(message: types.Message, bot:Bot):
 
     if message.from_user.id in black_list:
         await message.answer('В доступе отказано, ты в черном списке')
+        connection.close()
         return
+
+
+    connection = sqlite3.connect(db_path, check_same_thread=False)
+    cursor = connection.cursor()
     # Только групповые чаты
     if message.chat.id == message.from_user.id:
         await message.answer(
@@ -49,15 +57,17 @@ async def golden_roulette(message: types.Message, bot:Bot):
         return
 
     if message.chat.id not in chats:
+        connection.close()
         await message.answer("кыш")
         return
 
     user = message.from_user
     user_id = user.id
-    user_mention = GetUserByID(user_id).mention
+    user_mention = GetUserByID(user_id, message.chat.id).mention
 
     # Не даем играть ботам
     if getattr(user, "is_bot", False):
+        connection.close()
         await message.answer("🤖 Боты не могут играть в золотую рулетку!")
         return
 
@@ -73,16 +83,18 @@ async def golden_roulette(message: types.Message, bot:Bot):
         bet = 100  # ставка по умолчанию
 
     if bet <= 0:
+        connection.close()
         await message.answer("📝Ставка должна быть положительным числом.")
         return
 
     MIN_BET = 100
     if bet < MIN_BET:
+        connection.close()
         await message.answer(f"📝Минимальная ставка в золотой рулетке: {MIN_BET} eZ¢.")
         return
 
     # Работаем с мешком из таблицы farma
-    connection = sqlite3.connect(main_path, check_same_thread=False)
+    connection = sqlite3.connect(db_path, check_same_thread=False)
     cursor = connection.cursor()
 
     try:
@@ -132,19 +144,21 @@ async def golden_roulette(message: types.Message, bot:Bot):
         new_meshok = meshok + win_amount
 
         try:
-            if meshok == 0:
-                # если записи нет — создаем
+            # Check if user exists in farma table
+            user_exists = cursor.execute(
+                "SELECT user_id FROM farma WHERE user_id = ?", (user_id,)
+            ).fetchone()
+            
+            if not user_exists:
+                # Create new record
                 cursor.execute(
-                    "INSERT OR IGNORE INTO farma (user_id, meshok, last_date) VALUES (?, ?, datetime('now'))",
+                    "INSERT INTO farma (user_id, meshok, last_date) VALUES (?, ?, datetime('now'))",
                     (user_id, new_meshok),
                 )
-                cursor.execute(
-                    "UPDATE farma SET meshok = ? WHERE user_id = ?",
-                    (new_meshok, user_id),
-                )
             else:
+                # Update existing record
                 cursor.execute(
-                    "UPDATE farma SET meshok = ? WHERE user_id = ?",
+                    "UPDATE farma SET meshok = ?, last_date = datetime('now') WHERE user_id = ?",
                     (new_meshok, user_id),
                 )
             connection.commit()

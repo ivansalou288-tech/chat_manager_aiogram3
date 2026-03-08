@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from typing import Optional
 
 from aiogram import Router, types, F, Bot
-from main.config3 import main_path, chats
+from main.config3 import get_db_path, init_chat_db, chats
 
 router = Router()
 
@@ -31,9 +31,9 @@ def _parse_limit(text: Optional[str], default: int = 10, max_limit: int = 50) ->
     return default
 
 
-def _detect_message_counter_column(cursor: sqlite3.Cursor, table_name: str) -> Optional[str]:
+def _detect_message_counter_column(cursor: sqlite3.Cursor) -> Optional[str]:
     try:
-        cols = [row[1] for row in cursor.execute(f"PRAGMA table_info([{table_name}])").fetchall()]
+        cols = [row[1] for row in cursor.execute(f"PRAGMA table_info([users])").fetchall()]
     except sqlite3.OperationalError:
         return None
     for candidate in ("mess_count", "message_count", "messages_count", "msg_count", "messages"):
@@ -59,12 +59,16 @@ async def show_messages_top_all_time(message: types.Message) -> None:
         return
 
     limit = _parse_limit(message.text)
-    table_name = str(-(message.chat.id))
-
-    connection = sqlite3.connect(main_path, check_same_thread=False)
+    chat_id = message.chat.id
+    
+    # Initialize database for this chat if it doesn't exist
+    init_chat_db(chat_id)
+    
+    db_path = get_db_path(chat_id)
+    connection = sqlite3.connect(db_path, check_same_thread=False)
     cursor = connection.cursor()
     try:
-        counter_col = _detect_message_counter_column(cursor, table_name)
+        counter_col = _detect_message_counter_column(cursor)
         if not counter_col:
             await message.reply("📝В базе не найдено поле счётчика сообщений (ожидаю `mess_count`).")
             return
@@ -73,7 +77,7 @@ async def show_messages_top_all_time(message: types.Message) -> None:
             rows = cursor.execute(
                 f"""
                 SELECT tg_id, username, nik, name, {counter_col}
-                FROM [{table_name}]
+                FROM users
                 ORDER BY {counter_col} DESC
                 LIMIT ?
                 """,

@@ -14,7 +14,7 @@ from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, CallbackQuery
 from aiogram.exceptions import TelegramBadRequest
 
-from main.config3 import all_path, get_db_path, init_chat_db, GetUserByMessage
+from main.config31 import all_path, get_db_path, init_chat_db, GetUserByMessage
 
 router = Router()
 
