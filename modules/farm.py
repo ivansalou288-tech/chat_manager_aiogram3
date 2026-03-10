@@ -34,8 +34,8 @@ async def farm(message: Message):
     try:
         cursor.execute(f"SELECT last_date FROM farma WHERE user_id = ?", (user_id,))
         date_result = cursor.fetchall()
-        if not date_result:
-            return
+        # if not date_result:
+        #     return
         lst = datetime.strptime(date_result[0][0], "%H:%M:%S %d.%m.%Y")
         now = datetime.now()
         delta = now - lst
